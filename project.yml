@@ -1,0 +1,83 @@
+name: Notched
+options:
+  bundleIdPrefix: com.freeman
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+targets:
+  Notched:
+    type: application
+    platform: macOS
+    sources:
+      - Notched
+      # Shown on first launch (the license alert in main.swift).
+      - path: LICENSE
+        buildPhase: resources
+    dependencies:
+      # Pinned and checksummed by scripts/fetch-sparkle.sh (see why there), not Swift Package Manager.
+      - framework: Vendor/Sparkle/Sparkle.framework
+        embed: true
+    preBuildScripts:
+      - name: Fetch Sparkle
+        basedOnDependencyAnalysis: false
+        script: '"$SRCROOT/scripts/fetch-sparkle.sh"'
+    info:
+      path: Notched/Info.plist
+      properties:
+        CFBundleDisplayName: Notched
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleIconFile: AppIcon
+        CFBundleIconName: AppIcon
+        LSUIElement: true
+        LSMinimumSystemVersion: "14.0"
+        LSApplicationCategoryType: public.app-category.utilities
+        NSHumanReadableCopyright: © 2026 Yiftach Freeman. Not affiliated with Apple.
+        # Baked into every build: changing it later strands everyone on the old feed.
+        SUFeedURL: https://notched.vercel.app/downloads/appcast.xml
+        # Printed by Sparkle's generate_keys (see scripts/release.sh). Empty = updater stays off.
+        SUPublicEDKey: ""
+        SUEnableAutomaticChecks: true
+    postBuildScripts:
+      # XcodeGen doesn't know Icon Composer's .icon type, so compile it the way
+      # ../Claude Meter/build.sh does: Assets.car (Liquid Glass) + AppIcon.icns for 14/15.
+      - name: Compile Liquid Glass icon
+        basedOnDependencyAnalysis: false
+        script: |
+          xcrun actool "$SRCROOT/AppIcon.icon" --compile "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH" \
+            --platform macosx --minimum-deployment-target 14.0 --app-icon AppIcon --standalone-icon-behavior all \
+            --output-partial-info-plist "$TARGET_TEMP_DIR/icon.plist" --errors --warnings > /dev/null
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.freeman.notched
+        FRAMEWORK_SEARCH_PATHS: $(SRCROOT)/Vendor/Sparkle
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: 1
+        SWIFT_VERSION: "6.0"
+        # Every Mac with a notch is Apple silicon.
+        ARCHS: arm64
+        # Not sandboxed: it has to read wallpapers from anywhere on disk.
+        ENABLE_APP_SANDBOX: false
+        # The icon script writes into the app bundle.
+        ENABLE_USER_SCRIPT_SANDBOXING: false
+        ENABLE_HARDENED_RUNTIME: false
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        DEVELOPMENT_TEAM: ""
+        DEAD_CODE_STRIPPING: true
+      configs:
+        # What scripts/release.sh archives: Developer ID, hardened runtime, secure timestamp.
+        Release:
+          ENABLE_HARDENED_RUNTIME: true
+          CODE_SIGN_IDENTITY: Developer ID Application
+          DEVELOPMENT_TEAM: 6QWCS23UJ3
+          OTHER_CODE_SIGN_FLAGS: --timestamp
+schemes:
+  Notched:
+    build:
+      targets:
+        Notched: all
+    run:
+      config: Debug
+    archive:
+      config: Release

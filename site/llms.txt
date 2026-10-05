@@ -1,0 +1,30 @@
+# Notched
+
+> Notched is a free, open-source macOS menu bar app that hides the MacBook camera notch. It saves a copy of your wallpaper with a black strip the height of the menu bar and sets that copy as your desktop picture, so the menu bar turns black and the notch blends into it.
+
+- Website: https://notched.vercel.app/
+- Download: https://notched.vercel.app/download (a signed, notarized DMG)
+- Source code: https://github.com/FreemanGT/notched (MIT licence)
+- Version: 1.0 (build 1)
+- Price: free. Made by Yiftach Freeman. Not affiliated with Apple.
+
+## Requirements
+
+- macOS 14 or later on Apple silicon. Built for MacBooks with a notch; it also works on external displays.
+
+## What it does
+
+- Adds a black band the exact height of each screen's menu bar to a copy of the wallpaper, rendered at that screen's resolution.
+- Optional rounded corners under the band (small, medium or large).
+- Dynamic wallpapers (time of day, light and dark) keep every frame and their schedule, so they keep changing.
+- Works on every display and every Space, or only on the built-in display if you choose.
+- Watches for wallpaper changes in the background (about every two seconds) and redoes the band.
+- macOS can't shuffle wallpapers under the band, so Notched rotates a folder of pictures itself (every 5 minutes up to daily). A shuffle folder set in System Settings is taken over automatically.
+- Turning it off puts the original wallpaper back. Other Spaces get theirs back the next time you visit them while Notched is running.
+- Leaves Aerial, colour and other live wallpapers alone.
+- Optional: start at login, hide the menu bar icon (open the app again to bring it back).
+
+## Privacy
+
+- Original wallpaper files are never modified. Copies live in ~/Library/Application Support/Notched.
+- The only network request is a daily update check (Sparkle) against https://notched.vercel.app/downloads/appcast.xml. No analytics, no account.

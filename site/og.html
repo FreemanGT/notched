@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- Source of assets/og.png (1200x630). Not deployed (.vercelignore). Render:
+     $B goto file://…/site/og.html; $B viewport 1200x630 --scale 1; $B screenshot --viewport site/assets/og.png -->
+<html><head><meta charset="utf-8"><style>
+html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #0b0c0f; color: #f1f3f6; }
+body { font-family: ui-rounded, -apple-system, BlinkMacSystemFont, sans-serif; }
+.top { position: absolute; left: 96px; top: 70px; display: flex; align-items: center; gap: 36px; }
+.top img { width: 148px; height: 148px; filter: drop-shadow(0 18px 36px rgb(34 140 160 / .45)); }
+h1 { margin: 0; font-size: 92px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+p { margin: 12px 0 0; font: 500 30px/1.3 -apple-system, BlinkMacSystemFont, sans-serif; color: #a0a7b2; }
+.laptop { position: absolute; left: 70px; right: 70px; top: 330px; height: 340px; padding: 16px 16px 0; border-radius: 40px 40px 0 0;
+  background: #0e0f12; box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / .14); }
+.screen { position: relative; height: 100%; border-radius: 24px 24px 0 0; overflow: hidden;
+  background:
+    radial-gradient(70% 60% at 78% 92%, rgb(255 168 120 / .95), transparent 70%),
+    radial-gradient(60% 55% at 12% 75%, rgb(255 122 140 / .55), transparent 70%),
+    linear-gradient(180deg, #8fc3f2 0%, #bcd9f2 38%, #f4d3b8 72%, #ec9a80 100%); }
+.bar { position: absolute; inset: 0 0 auto; height: 38px; background: #000; display: flex; justify-content: space-between; align-items: center;
+  padding: 0 26px; font: 600 15px -apple-system, BlinkMacSystemFont, sans-serif; color: #f4f5f7; }
+.bar span { margin-right: 20px; font-weight: 400; } .bar b { margin-right: 22px; }
+.cam { position: absolute; left: 50%; top: 13px; width: 11px; height: 11px; translate: -50% 0; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #3e4c70, #121826 70%); }
+.fillet { position: absolute; top: 38px; width: 26px; height: 26px; }
+.fillet.l { left: 0; background: radial-gradient(circle at 100% 100%, transparent 25.5px, #000 26px); }
+.fillet.r { right: 0; background: radial-gradient(circle at 0 100%, transparent 25.5px, #000 26px); }
+</style></head><body>
+<div class="top">
+  <img src="assets/icon-256.png" alt="">
+  <div><h1>Notched</h1><p>A black menu bar. No more notch.</p></div>
+</div>
+<div class="laptop"><div class="screen">
+  <div class="bar"><div><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Window</span><span>Help</span></div><div>Mon 9:41</div></div>
+  <i class="cam"></i><i class="fillet l"></i><i class="fillet r"></i>
+</div></div>
+</body></html>

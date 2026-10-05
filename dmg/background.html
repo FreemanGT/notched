@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- Source of dmg/background.tiff (660x400 window, icons at 170,190 and 490,190). Render at 1x and 2x:
+     $B goto file://…/dmg/background.html; $B viewport 660x400 --scale 1; $B screenshot --viewport bg.png
+     $B viewport 660x400 --scale 2; $B screenshot --viewport bg@2x.png
+     tiffutil -cathidpicheck bg.png bg@2x.png -out dmg/background.tiff
+     Mid-tone on purpose: Finder labels are black in light mode and white in dark mode, and both must read. -->
+<html><head><meta charset="utf-8"><style>
+html, body { margin: 0; width: 660px; height: 400px; overflow: hidden; }
+body {
+  background:
+    radial-gradient(250px 200px at 170px 190px, rgb(94 224 207 / .30), transparent 70%),
+    radial-gradient(250px 200px at 490px 190px, rgb(143 195 242 / .32), transparent 70%),
+    linear-gradient(180deg, #7b8794 0%, #66717d 100%);
+  font: 600 13px -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #fff;
+}
+.band { position: absolute; inset: 0 0 auto; height: 22px; background: #000; }
+.band::before, .band::after { content: ""; position: absolute; top: 22px; width: 14px; height: 14px; }
+.band::before { left: 0; background: radial-gradient(circle at 100% 100%, transparent 13.5px, #000 14px); }
+.band::after { right: 0; background: radial-gradient(circle at 0 100%, transparent 13.5px, #000 14px); }
+svg { position: absolute; left: 0; top: 0; }
+p { position: absolute; left: 0; right: 0; top: 318px; margin: 0; text-align: center; letter-spacing: .1px; opacity: .92; }
+</style></head><body>
+<div class="band"></div>
+<svg width="660" height="400" viewBox="0 0 660 400">
+  <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" opacity=".85">
+    <path d="M262 190 H392" stroke-width="3.5" stroke-dasharray="1 11"/>
+    <path d="M384 176 L400 190 L384 204" stroke-width="3.5"/>
+  </g>
+</svg>
+<p>Drag Notched into Applications</p>
+</body></html>

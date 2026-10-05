@@ -1,0 +1,8 @@
+.DS_Store
+build/
+releases/
+Notched.xcodeproj/
+site/downloads/*.dmg
+site/downloads/*.delta
+.gstack/
+Vendor/
