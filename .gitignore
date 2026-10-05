@@ -6,3 +6,4 @@ site/downloads/*.dmg
 site/downloads/*.delta
 .gstack/
 Vendor/
+.vercel/
