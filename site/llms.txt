@@ -5,7 +5,7 @@
 - Website: https://notched.vercel.app/
 - Download: https://notched.vercel.app/download (a signed, notarized DMG)
 - Source code: https://github.com/FreemanGT/notched (MIT licence)
-- Version: 1.0 (build 1)
+- Version: 1.0.1 (build 2)
 - Price: free. Made by Yiftach Freeman. Not affiliated with Apple.
 
 ## Requirements
