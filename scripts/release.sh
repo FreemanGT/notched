@@ -65,6 +65,14 @@ if codesign -d --entitlements - "$APP" 2>/dev/null | grep -q get-task-allow; the
   echo "error: the exported app carries get-task-allow"; exit 1
 fi
 
+echo "==> Notarize the app itself"
+# The DMG's ticket covers the app only while it's inside the DMG. A stapled app carries its own, so the
+# copy people drag to Applications passes Gatekeeper even offline (spctl called the 1.0 copy unnotarized).
+ditto -c -k --keepParent "$APP" build/Notched.zip
+xcrun notarytool submit build/Notched.zip --keychain-profile "$NOTARY_PROFILE" --wait
+xcrun stapler staple "$APP"
+spctl -a -vv "$APP"
+
 echo "==> DMG"
 # Styled window: dmg/DS_Store was made once with dmgbuild (volume "Notched", 660x400 window, icons at
 # 170,190 / 490,190) and points at /.background.tiff; dmg/background.html is the artwork's source.
