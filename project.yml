@@ -36,7 +36,7 @@ targets:
         # Baked into every build: changing it later strands everyone on the old feed.
         SUFeedURL: https://notched.vercel.app/downloads/appcast.xml
         # Printed by Sparkle's generate_keys (see scripts/release.sh). Empty = updater stays off.
-        SUPublicEDKey: ""
+        SUPublicEDKey: "cSBM/MDVyYi2X+2QcZFduN+ABB1vKg8XZV+Nfg1Elhc="
         SUEnableAutomaticChecks: true
     postBuildScripts:
       # XcodeGen doesn't know Icon Composer's .icon type, so compile it the way
