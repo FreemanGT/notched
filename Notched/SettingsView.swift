@@ -1,18 +1,17 @@
 import AppKit
-import Sparkle
 import SwiftUI
 
-/// The popover. Settings live in UserDefaults through @AppStorage; WallpaperManager watches them,
+/// The menu window. Settings live in UserDefaults through @AppStorage; WallpaperManager watches them,
 /// so nothing here has to tell it what changed.
 struct SettingsView: View {
     let manager: WallpaperManager
-    let updater: SPUUpdater?
+    let updates: Updates
 
-    /// Popover width and insets. The top inset is the larger one: macOS 26+ popovers have big corner
+    /// Menu width and insets. The top inset is the larger one: macOS 26+ menu windows have big corner
     /// radii, and content near the top edge reads as cramped against them.
     static let width: CGFloat = 340
     static let inset: CGFloat = 18
-    static let topInset: CGFloat = 24
+    static let topInset: CGFloat = 20
 
     @AppStorage(Pref.enabled) private var enabled = false
     @AppStorage(Pref.dynamic) private var dynamic = true
@@ -64,8 +63,12 @@ struct SettingsView: View {
             }))
             option("Hide menu bar icon", $hideIcon, "Open Notched again to bring it back.")
             Divider()
+            if let version = updates.pending {
+                Button("Update to Notched \(version)…") { updates.check() }
+                    .buttonStyle(.borderedProminent)
+            }
             HStack {
-                Button("Check for Updates…") { updater?.checkForUpdates() }.disabled(updater == nil)
+                Button("Check for Updates…") { updates.check() }
                 Spacer()
                 Text(version).foregroundStyle(.tertiary)
                 Button("Quit") { NSApp.terminate(nil) }

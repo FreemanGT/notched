@@ -17,63 +17,104 @@ if let flag = CommandLine.arguments.firstIndex(of: "--snapshot") {
     exit(0)
 }
 
+/// A SwiftUI MenuBarExtra, not an NSStatusItem + NSPopover. On macOS 26+ status items are drawn by the
+/// system: a popover anchored to the item's button landed 55 pt too high (its top hidden behind the
+/// menu bar), and a menu bar app can't activate itself, so the popover took an extra click. The system
+/// places and focuses its own menu bar windows.
+struct NotchedApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var app
+    @AppStorage(Pref.hideIcon) private var hideIcon = false
+
+    var body: some Scene {
+        MenuBarExtra(isInserted: Binding(get: { !hideIcon }, set: { hideIcon = !$0 })) {
+            SettingsView(manager: app.manager, updates: app.updates)
+        } label: {
+            MenuBarIcon(updates: app.updates)
+        }
+        .menuBarExtraStyle(.window)
+    }
+}
+
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private let manager = WallpaperManager()
-    // Off until project.yml carries Sparkle's public key: without it no update could be verified.
-    private let updater: SPUStandardUpdaterController? =
-        (Bundle.main.object(forInfoDictionaryKey: "SUPublicEDKey") as? String ?? "").isEmpty
-            ? nil : SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
-    private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-    private let popover = NSPopover()
+    let manager = WallpaperManager()
+    let updates = Updates()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         UserDefaults.standard.register(defaults: Pref.defaults)
-        // For website screenshots of the real popover: a sample in the preview, never your wallpaper.
+        // For website screenshots of the real menu: a sample in the preview, never your wallpaper.
         if CommandLine.arguments.contains("--demo-preview") {
             manager.preview = Snapshot.sampleWallpaper()
             manager.previewLocked = true
         }
         if CommandLine.arguments.contains("--dark") { NSApp.appearance = NSAppearance(named: .darkAqua) }
         guard License.accepted() else { return NSApp.terminate(nil) }
-        item.button?.image = NSImage(systemSymbolName: "menubar.rectangle", accessibilityDescription: "Notched")
-        item.button?.target = self
-        item.button?.action = #selector(togglePopover)
-        popover.behavior = .transient
-        popover.contentViewController = NSHostingController(rootView: SettingsView(manager: manager, updater: updater?.updater))
-        NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.syncIcon() }
-        }
-        syncIcon()
         manager.start()
-        if !UserDefaults.standard.bool(forKey: "launchedBefore") {
-            UserDefaults.standard.set(true, forKey: "launchedBefore")
-            showPopover()
-        }
+        updates.start()
     }
 
     /// Opening Notched again (from Applications or Spotlight) is how a hidden icon comes back.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         UserDefaults.standard.set(false, forKey: Pref.hideIcon)
-        syncIcon()
-        Task { showPopover() }   // next run-loop turn, once the icon has a place in the menu bar
         return false
     }
+}
 
-    private func syncIcon() {
-        item.isVisible = !UserDefaults.standard.bool(forKey: Pref.hideIcon)
+/// Sparkle with gentle reminders: a menu bar app must not throw an update window onto whatever Space
+/// happens to be active (1.0 did). Background checks only badge the menu bar icon; the update window
+/// opens, in front and on the current Space, when you ask for it.
+@MainActor @Observable
+final class Updates: NSObject {
+    /// A version found by a background check, waiting for you.
+    private(set) var pending: String?
+    @ObservationIgnored private var controller: SPUStandardUpdaterController?
+
+    /// Stays off until project.yml carries Sparkle's public key: without it no update could be verified.
+    func start() {
+        guard !(Bundle.main.object(forInfoDictionaryKey: "SUPublicEDKey") as? String ?? "").isEmpty else { return }
+        controller = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: self)
     }
 
-    @objc private func togglePopover() {
-        popover.isShown ? popover.performClose(nil) : showPopover()
-    }
-
-    private func showPopover() {
-        guard item.isVisible, let button = item.button else { return }
+    func check() {
         NSApp.activate()
-        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        controller?.checkForUpdates(nil)
     }
 }
+
+extension Updates: @preconcurrency SPUStandardUserDriverDelegate {
+    var supportsGentleScheduledUpdateReminders: Bool { true }
+
+    func standardUserDriverShouldHandleShowingScheduledUpdate(_ update: SUAppcastItem, andInImmediateFocus immediateFocus: Bool) -> Bool {
+        immediateFocus
+    }
+
+    func standardUserDriverWillHandleShowingUpdate(_ handleShowingUpdate: Bool, forUpdate update: SUAppcastItem, state: SPUUserUpdateState) {
+        if handleShowingUpdate { NSApp.activate() } else { pending = update.displayVersionString }
+    }
+
+    func standardUserDriverDidReceiveUserAttention(forUpdate update: SUAppcastItem) { pending = nil }
+
+    func standardUserDriverWillFinishUpdateSession() { pending = nil }
+}
+
+/// The menu bar icon: sized like the system's own items (the bare symbol read too small), with a
+/// down arrow while an update waits.
+struct MenuBarIcon: View {
+    let updates: Updates
+
+    var body: some View {
+        Image(nsImage: Self.image(update: updates.pending != nil))
+    }
+
+    static func image(update: Bool) -> NSImage {
+        let symbol = update ? "menubar.arrow.down.rectangle" : "menubar.rectangle"
+        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: "Notched")?
+            .withSymbolConfiguration(.init(pointSize: 16, weight: .medium)) ?? NSImage()
+        image.isTemplate = true
+        return image
+    }
+}
+
 
 /// First launch: what Notched does to your wallpaper, and the MIT license. Agree or quit.
 enum License {
@@ -95,6 +136,8 @@ enum License {
         alert.informativeText = """
             Notched hides the notch by saving edited copies of your wallpapers and setting those as your \
             desktop picture. Your original files are never changed, and switching Notched off puts them back.
+
+            It lives in your menu bar: click its icon, a small screen with a bar across the top, to switch it on.
 
             Notched is free and open source under the MIT License:
             """
@@ -125,12 +168,12 @@ enum Snapshot {
         let manager = WallpaperManager()
         manager.preview = sampleWallpaper()
         manager.previewLocked = true
-        let updater = SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: nil, userDriverDelegate: nil)
+        let updates = Updates()
         // Controls only draw in their active (accent-coloured) state in the key window of the active
         // app, so the window is made key while parked far off every screen.
         NSApplication.shared.finishLaunching()
         for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
-            let view = NSHostingView(rootView: SettingsView(manager: manager, updater: updater.updater)
+            let view = NSHostingView(rootView: SettingsView(manager: manager, updates: updates)
                 .background(Color(nsColor: .windowBackgroundColor))
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .defaultAppStorage(defaults))
@@ -146,7 +189,6 @@ enum Snapshot {
             NSApp.activate(ignoringOtherApps: true)   // a one-off dev tool may take focus for a moment
             RunLoop.main.run(until: Date().addingTimeInterval(0.6))
             view.layoutSubtreeIfNeeded()
-            print("\(name): app active \(NSApp.isActive), window key \(window.isKeyWindow)")
             defer { window.orderOut(nil) }
             guard let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { continue }
             view.cacheDisplay(in: view.bounds, to: rep)
@@ -190,8 +232,4 @@ enum Snapshot {
     }
 }
 
-MainActor.assumeIsolated {
-    let delegate = AppDelegate()
-    NSApplication.shared.delegate = delegate
-    withExtendedLifetime(delegate) { NSApplication.shared.run() }
-}
+MainActor.assumeIsolated { NotchedApp.main() }
