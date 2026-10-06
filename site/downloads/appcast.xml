@@ -3,19 +3,22 @@
     <channel>
         <title>Notched</title>
         <item>
-            <title>1.0.1</title>
-            <pubDate>Mon, 05 Oct 2026 20:12:12 +0300</pubDate>
-            <sparkle:version>2</sparkle:version>
-            <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
+            <title>1.0.2</title>
+            <pubDate>Tue, 06 Oct 2026 12:12:27 +0300</pubDate>
+            <sparkle:version>3</sparkle:version>
+            <sparkle:shortVersionString>1.0.2</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
             <description><![CDATA[<ul>
-  <li>The app now carries its own notarization ticket, so it opens right away after you drag it to Applications, even offline.</li>
+  <li>The menu now opens fully below the menu bar and responds to the first click.</li>
+  <li>A larger menu bar icon, sized like the system&#8217;s own.</li>
+  <li>Updates no longer pop up on another Space: the icon shows a down arrow and the menu offers the update.</li>
 </ul>
 ]]></description>
-            <enclosure url="https://notched.vercel.app/downloads/Notched-1.0.1.dmg" length="4124578" type="application/octet-stream" sparkle:edSignature="vdeYz8qXwMjp4haKDT6BWOxMdARsucmhtLks4vZjX3svSEOuRDig6qgcNEueH9Aqfh03gaBjy4mdSIqkWT1nAA=="/>
+            <enclosure url="https://notched.vercel.app/downloads/Notched-1.0.2.dmg" length="4128438" type="application/octet-stream" sparkle:edSignature="YX1FoVx55V1tjVUDfNMetAhGQy847PzoduINF/iVMLUk4/y64bzvvfOLHVthK2Gj/CDDKJfSuU2LcParVb4/Aw=="/>
             <sparkle:deltas>
-                <enclosure url="https://notched.vercel.app/downloads/Notched2-1.delta" sparkle:deltaFrom="1" length="12082" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="WHovr4+Medgye8+0Bw7jbnBqLQJ/OX35fSt7Z42JI+ar1gCB92U69m/LKHwDxnD0pe6jH0gu4mBVwaMDSh27DQ=="/>
+                <enclosure url="https://notched.vercel.app/downloads/Notched3-2.delta" sparkle:deltaFrom="2" length="43158" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="cVcGuuTND4bC8LXDNB1AY5+/pWYp8Hg25MQlQG2E7I7rp8mpd9G6nDzax6U5XvTCiyCCXuZtOPb8EFUfXHzeCA=="/>
+                <enclosure url="https://notched.vercel.app/downloads/Notched3-1.delta" sparkle:deltaFrom="1" length="42458" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="B6ghGWMUHWO54DfMXVzkXhk2XpY0wv/c9wHEkRmNw33GQJkb502WW2L8uYpC0T2g5jWK5GIVKRkZAz4LNxjaCw=="/>
             </sparkle:deltas>
         </item>
     </channel>
