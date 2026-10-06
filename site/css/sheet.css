@@ -1,0 +1,99 @@
+/* The download sheet (SPEC §4.7). Lazy-loaded by lib/signup.js. The notch opens. */
+.sheet {
+  --pw: min(440px, calc(100vw - 32px));
+  position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+  margin: 0; padding: 0; border: 0; background: transparent; color: var(--fg); overflow: visible;
+}
+.sheet::backdrop {
+  background: rgba(0,0,0,.6);
+  -webkit-backdrop-filter: blur(8px) brightness(.7); backdrop-filter: blur(8px) brightness(.7);
+  animation: sheet-fade 200ms linear both;
+}
+.sheet.is-closing::backdrop { animation: sheet-fade 200ms linear 200ms reverse both; }
+@keyframes sheet-fade { from { opacity: 0; } }
+
+/* 1. the band strip, exactly over the nav. signup.js grows it out of the notch, then the panel drops from it.
+   The hairline runs along the band's underside, round the 14 pt fillets and down the panel's sides. */
+.sheet { --fr: calc(14 * var(--pt)); --hair: #2E2E2E; }
+.sheet__band {
+  --seg: calc(50% - var(--pw) / 2 - var(--fr) + 1px);
+  position: absolute; z-index: 1; inset: 0 0 auto; height: var(--mb);
+  background:
+    linear-gradient(var(--hair) 0 0) left bottom / var(--seg) 1px no-repeat,
+    linear-gradient(var(--hair) 0 0) right bottom / var(--seg) 1px no-repeat,
+    #000;
+}
+.sheet__glint {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 1px; opacity: 0; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--focus) 30% 70%, transparent);
+}
+.sheet__fil {
+  position: absolute; top: calc(100% - 1px); width: var(--fr); height: var(--fr); transform-origin: 100% 0;
+  left: calc(50% - var(--pw) / 2 - var(--fr) + 1px);
+  background: radial-gradient(circle at 0 100%, transparent calc(var(--fr) - 1.6px), var(--hair) calc(var(--fr) - 1px), var(--hair) calc(var(--fr) - .4px), #000 var(--fr));
+}
+.sheet__fil--r {
+  left: calc(50% + var(--pw) / 2 - 1px); transform-origin: 0 0;
+  background: radial-gradient(circle at 100% 100%, transparent calc(var(--fr) - 1.6px), var(--hair) calc(var(--fr) - 1px), var(--hair) calc(var(--fr) - .4px), #000 var(--fr));
+}
+
+/* 2. the panel, hanging from the band */
+.sheet__panel {
+  position: absolute; top: var(--mb); left: 50%; width: var(--pw); translate: -50% 0;
+  max-height: calc(100dvh - var(--mb) - 16px); overflow: auto; overscroll-behavior: contain;
+  background: #000; border: 1px solid var(--hair); border-top: 0; border-radius: 0 0 28px 28px;
+  padding: 18px 28px 24px;
+  box-shadow: 0 -120px 0 #000;                    /* fills the gap under the band while the spring overshoots */
+}
+.sheet__head { display: flex; align-items: center; justify-content: space-between; margin: 0 -12px 10px 0; }
+.sheet__app { display: inline-flex; align-items: center; gap: 8px; font: 640 13px/1 var(--f-text); }
+.sheet__app svg { width: 16px; height: 11px; }
+.sheet__app .fill { fill: currentColor; }
+.sheet__x { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; color: var(--fg-2); }
+.sheet__x:hover { color: var(--fg); background: rgba(255,255,255,.06); }
+.sheet__x svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+
+.sheet__body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.sheet__body > *, .sheet-form > * { min-width: 0; }
+.sheet .cta--lg { font-size: clamp(16px, 4.8vw, 20px); padding: 0 20px; }
+.sheet-kicker { display: flex; align-items: center; gap: 8px; color: var(--fg-3); font: 450 12px/1.3 var(--f-mono); font-stretch: 87.5%; letter-spacing: .06em; }
+.sheet-kicker--ok { color: var(--fg); }
+.sheet-title { font: 760 32px/1 var(--f-display); letter-spacing: -.03em; font-variation-settings: "opsz" 48; outline: none; }
+.sheet-lede, .sheet-who { color: var(--fg-2); font: 420 16px/1.5 var(--f-text); }
+.sheet-who { color: var(--fg); font-size: 15px; overflow-wrap: anywhere; }
+.sheet-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 4px; }
+.sheet-field { display: grid; gap: 8px; transform-origin: 50% 0; }
+.sheet-field label { color: var(--fg-3); font: 450 12px/1.3 var(--f-mono); font-stretch: 87.5%; letter-spacing: .06em; text-transform: uppercase; }
+.sheet-field input {
+  height: 52px; width: 100%; padding: 0 16px; border-radius: var(--r-input);
+  background: var(--ink-2) linear-gradient(#000, #000) no-repeat 0 0 / 0 2px; border: 1px solid var(--line-2);
+  color: var(--fg); font: 420 17px/1 var(--f-text);
+  transition: border-color var(--d-micro) linear, background-size 200ms var(--e-sweep);
+}
+.sheet-field input::placeholder { color: var(--fg-3); }
+.sheet-field input { caret-color: var(--focus); }
+.sheet-field input:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 1px var(--focus); background-size: 100% 2px; }
+.sheet:focus-visible { outline: none; }
+.sheet :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.sheet .sheet-field input:focus-visible { outline: none; }
+.sheet-field input[aria-invalid="true"] { border-color: var(--error); }
+.sheet-err { min-height: 0; color: var(--error); font: 500 14px/1.4 var(--f-text); }
+.sheet-err:empty { display: none; }
+.sheet-meta { text-align: center; color: var(--fg-3); font: 450 12px/1.3 var(--f-mono); font-stretch: 87.5%; letter-spacing: .02em; }
+.sheet-fine { color: var(--fg-3); font: 450 12px/1.5 var(--f-mono); font-stretch: 87.5%; }
+.sheet-fine a { text-decoration: underline; text-underline-offset: 2px; }
+.sheet-fine a:hover { color: var(--fg); }
+.sheet-text { justify-self: start; min-height: 44px; color: var(--fg-2); text-decoration: underline; text-underline-offset: 3px; font: 500 14px/1 var(--f-text); }
+.sheet-who .sheet-text { min-height: 0; padding: 0; }
+.sheet-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+.sheet-row .pill-ghost { height: 44px; padding: 0 20px; font-size: 15px; }
+.sheet-url input { width: 100%; height: 44px; padding: 0 12px; border-radius: var(--r-input); background: var(--ink-2); border: 1px solid var(--line-2); font: 450 14px/1 var(--f-mono); }
+.sheet-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.sheet-check { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.sheet-check circle { stroke-dasharray: 66; stroke-dashoffset: 0; animation: sheet-ring 600ms var(--e-out) both; }
+.sheet-check path { stroke-dasharray: 16; animation: sheet-tick 300ms var(--e-out) 400ms both; }
+@keyframes sheet-ring { from { stroke-dashoffset: 66; } }
+@keyframes sheet-tick { from { stroke-dashoffset: 16; } }
+
+@media (max-width: 599px) { .sheet__panel { padding: 14px 22px 22px; } .sheet-title { font-size: 28px; } }
+@media (prefers-reduced-motion: reduce) { .sheet-check circle, .sheet-check path { animation: none; } }

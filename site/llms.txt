@@ -4,8 +4,8 @@
 
 - Website: https://notched.vercel.app/
 - Download: https://notched.vercel.app/download (a signed, notarized DMG)
-- Source code: https://github.com/FreemanGT/notched (MIT licence)
-- Version: 1.0.1 (build 2)
+- Source code: https://github.com/FreemanGT/notched (MIT license)
+- Version: 1.0.2 (build 3)
 - Price: free. Made by Yiftach Freeman. Not affiliated with Apple.
 
 ## Requirements
@@ -21,10 +21,11 @@
 - Watches for wallpaper changes in the background (about every two seconds) and redoes the band.
 - macOS can't shuffle wallpapers under the band, so Notched rotates a folder of pictures itself (every 5 minutes up to daily). A shuffle folder set in System Settings is taken over automatically.
 - Turning it off puts the original wallpaper back. Other Spaces get theirs back the next time you visit them while Notched is running.
-- Leaves Aerial, colour and other live wallpapers alone.
+- Leaves Aerial, color and other live wallpapers alone.
 - Optional: start at login, hide the menu bar icon (open the app again to bring it back).
 
 ## Privacy
 
 - Original wallpaper files are never modified. Copies live in ~/Library/Application Support/Notched.
 - The only network request is a daily update check (Sparkle) against https://notched.vercel.app/downloads/appcast.xml. No analytics, no account.
+- The website asks for an email when you download, used only for Notched updates; it has no analytics or tracking.

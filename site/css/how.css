@@ -1,0 +1,136 @@
+/* #how (SPEC §5.5): "It's just a picture." Exploded view of the four layers. Every rule scoped under #how. */
+#how { --o: 0; --sep: 0; --rim: 1; --push: 0; --knob: cubic-bezier(.3,1.3,.5,1); background: var(--black); color: var(--fg); }
+
+/* ---------------------------------------------------------------- copy column */
+#how .how__title { margin: 0 0 clamp(28px, 4.5vh, 48px); max-width: 9ch; }
+#how .how__steps { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(12px, 2vh, 20px); }
+#how .how__step { position: relative; display: grid; grid-template-columns: 3rem minmax(0, 1fr); align-items: baseline; color: var(--fg-3); transition: color var(--d-ui) var(--e-out); }
+#how .how__step p { margin: 0; max-width: 34ch; line-height: 1.32; }
+#how .how__n { font: 500 12px/1 var(--f-mono); font-stretch: 87.5%; letter-spacing: .06em; transition: transform var(--d-ui) var(--e-out); }
+#how .how__step.is-on { color: var(--fg); }
+#how .how__foot { margin: clamp(28px, 4.5vh, 48px) 0 0; max-width: 46ch; font: 450 12px/1.6 var(--f-mono); font-stretch: 87.5%; color: var(--fg-3); }
+
+/* ---------------------------------------------------------------- planes (shared by every layout) */
+#how .how__plane { appearance: none; margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer;
+  display: block; container-type: inline-size; border-radius: 1.4cqw; -webkit-tap-highlight-color: transparent; }
+#how .how__plane:focus-visible { outline: 2px solid var(--focus); outline-offset: 6px; }
+/* menu-bar scale: 1.84x true (1512 pt screen) so the band reads at card size (≥24px on a 576px card) */
+#how .how__face { --p: calc(100cqw / 820); position: absolute; inset: 0; display: block; overflow: hidden; border-radius: inherit; }
+#how .how__wp { position: absolute; inset: 0; background: linear-gradient(180deg, var(--wp-day-top), var(--wp-day-mid) 52%, var(--wp-day-hz)); }
+#how .how__plane--orig .how__face { box-shadow: 0 0 0 1px rgba(255,255,255,.1); }
+#how .how__plane--desk .how__face { box-shadow: 0 0 0 1px rgba(255,255,255,.18); }
+#how .how__plane--copy .how__face { overflow: visible; }
+#how .how__plane--copy .how__face::after { content: ""; position: absolute; inset: -7px; border: 1px dashed var(--line-2); border-radius: calc(1.4cqw + 7px); pointer-events: none; opacity: calc(.15 + var(--sep) * .85); }
+#how .how__plane--copy .how__wp { border-radius: inherit; overflow: hidden; }
+/* the strip lives on a transparent sheet: faint checker reads as "nothing here but the band" */
+/* the strip lives on a clear sheet: just an edge, so the black bar is the only thing on it */
+#how .how__plane--strip .how__face { background: linear-gradient(rgba(118,169,255,.2), rgba(118,169,255,.05) 55%, rgba(118,169,255,.02)); }
+
+#how .how__slab { position: absolute; z-index: 2; inset: 0 0 auto; height: calc(37 * var(--p)); }
+#how .how__band { position: absolute; inset: 0; background: #000; }
+#how .how__fil { position: absolute; top: 100%; width: calc(14 * var(--p)); height: calc(14 * var(--p)); }
+#how .how__fil--l { left: 0; background: radial-gradient(circle calc(14 * var(--p)) at 100% 100%, transparent 98%, #000 100%); }
+#how .how__fil--r { right: 0; background: radial-gradient(circle calc(14 * var(--p)) at 0 100%, transparent 98%, #000 100%); }
+/* rim light: the slab catches the copy's light from below */
+#how .how__plane--strip .how__band { box-shadow: 0 0 0 1px rgba(255,255,255,.7), 0 0 calc(30 * var(--p)) calc(4 * var(--p)) rgba(118,169,255,.65); }
+#how .how__plane--strip .how__face::after { content: ""; position: absolute; z-index: 5; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); pointer-events: none; }
+#how .how__plane--strip .how__fil { filter: drop-shadow(0 0 calc(6 * var(--p)) rgba(140,190,255,.95)) drop-shadow(0 0 1px rgba(255,255,255,.9)); }
+#how .how__plane--strip .how__spill { opacity: var(--sep); background: radial-gradient(90% 38% at 50% 0%, rgba(118,169,255,.55), rgba(107,227,208,.1) 60%, transparent 80%); }
+
+#how .how__menu { position: absolute; z-index: 3; inset: 0 0 auto; height: calc(37 * var(--p)); display: flex; align-items: center; justify-content: space-between;
+  padding-inline: calc(22 * var(--p)); font: 500 calc(13 * var(--p))/1 var(--f-mac); word-spacing: calc(11 * var(--p)); color: #fff; white-space: nowrap; }
+#how .how__menu b { font-weight: 700; }
+#how .how__notch { position: absolute; z-index: 4; top: 0; left: 50%; width: calc(185 * var(--p)); height: calc(32 * var(--p)); translate: -50% 0;
+  background: #000; border-radius: 0 0 calc(9 * var(--p)) calc(9 * var(--p)); }
+#how .how__notch::after { content: ""; position: absolute; inset: 0; border: 1px solid rgba(255,255,255,.55); border-top: 0; border-radius: inherit;
+  box-shadow: 0 0 calc(10 * var(--p)) rgba(140,190,255,.35); opacity: var(--rim); filter: blur(calc((1 - var(--rim)) * 3px)); }
+#how .how__lens { position: absolute; left: 50%; top: 50%; width: calc(8 * var(--p)); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #4a5f8c, #0b0f18 62%); box-shadow: 0 0 0 1px rgba(255,255,255,.07); opacity: calc(.3 + var(--rim) * .7); }
+
+#how .how__spill { position: absolute; z-index: 1; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: calc(var(--sep) * .8);
+  background: radial-gradient(120% 75% at 50% 115%, rgba(118,169,255,.6), rgba(107,227,208,.12) 55%, transparent 75%); }
+#how .how__plane--desk .how__spill { opacity: calc(var(--sep) * .45); }
+/* Spread: the desk plane sits over the strip's band edge; its picture thins to a ghost so the black strip below reads. */
+#how .how__plane--desk .how__wp { opacity: calc(1 - var(--sep) * .9); }
+
+/* ---------------------------------------------------------------- desk: sticky exploded view */
+@media (min-width: 900px) and (prefers-reduced-motion: no-preference) {
+  #how { height: 180vh; }
+  #how .how__stage { position: sticky; top: 0; height: 100vh; display: flex; align-items: center; overflow: clip; }
+  #how .how__copy { grid-column: 1 / span 5; position: relative; z-index: 2; }
+  #how .how__view { grid-column: 6 / -1; position: relative; height: min(88vh, 820px); }
+  #how .how__copy { max-width: calc(100% + var(--gutter) - 2vw - 40px); }
+  #how .how__scene { position: absolute; left: -2vw; top: 50%; width: 40vw; aspect-ratio: 16 / 10; translate: 0 calc(-50% + var(--push) * 4vh); perspective: 1600px; perspective-origin: 50% 40%;
+    scale: calc(1 + var(--push) * .22); transform-origin: 0 0; }   /* left edge fixed: the push never reaches the steps */
+  #how .how__rig { position: absolute; inset: 0; transform-style: preserve-3d;
+    transform: translateY(calc(var(--o) * 8vw)) rotateX(calc(var(--o) * 58deg)) rotateZ(calc(var(--o) * -32deg)) scale(calc(1 - var(--o) * .18)); }
+  #how .how__plane { position: absolute; inset: 0; --lift: 0;
+    transform: translateZ(calc(var(--sep) * var(--i) * 120px + var(--i) * .6px)); translate: 0 0 calc(var(--lift) * 40px);
+    transition: translate .55s var(--knob); }
+  #how .how__plane:focus-visible, #how .how__plane[aria-pressed="true"] { --lift: 1; }
+  @media (hover: hover) and (pointer: fine) { #how .how__plane:hover { --lift: 1; } }
+  #how.is-live .how__rig, #how.is-live .how__plane { will-change: transform; }
+  #how .how__glow { position: absolute; inset: -30% -25%; transform: translateZ(-90px); border-radius: 50%; pointer-events: none; opacity: var(--sep);
+    background: radial-gradient(closest-side, rgba(59,113,254,.42), rgba(107,227,208,.1) 62%, transparent); }
+
+  #how .how__dot { position: absolute; z-index: 6; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: #fff;
+    box-shadow: 0 0 0 3px rgba(0,0,0,.45), 0 0 14px rgba(255,255,255,.6); opacity: 0; }
+  #how .how__plane--orig .how__dot  { left: 78%; top: 72%; }
+  #how .how__plane--copy .how__dot  { left: 86%; top: 34%; }
+  #how .how__plane--strip .how__dot { left: 88%; top: calc(18.5 * var(--p)); }
+  #how .how__plane--desk .how__dot  { left: 50%; top: calc(16 * var(--p)); }
+
+  #how .how__leaders { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  #how .how__leaders line { stroke: rgba(255,255,255,.42); stroke-width: 1; stroke-dasharray: 1; stroke-dashoffset: 1; vector-effect: non-scaling-stroke; }
+  #how .how__tags { list-style: none; margin: 0; padding: 0; }
+  #how .how__tag { position: absolute; top: 0; right: calc(-1 * var(--margin) + 12px); width: 14.75rem; padding-left: 14px;
+    font: 450 11px/1.5 var(--f-mono); font-stretch: 87.5%; letter-spacing: .05em; color: var(--fg-2); opacity: 0;
+    transition: color var(--d-ui) var(--e-out); }
+  #how .how__tag::before { content: ""; position: absolute; left: 0; top: .62em; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  #how .how__tag.is-hot { color: var(--fg); }
+
+  #how .how__stamp { position: absolute; z-index: 7; left: 50%; top: 100%; translate: -50% -50%; opacity: 0; }
+}
+
+/* the stamp: a black pill with a live dot (the toast's language) */
+#how .how__stamp { margin: 0; display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px 10px 13px; border: 1px solid var(--line-2); border-radius: var(--r-pill);
+  background: #000; font: 500 11px/1 var(--f-mono); font-stretch: 87.5%; letter-spacing: .08em; color: var(--fg); white-space: nowrap; }
+#how .how__stamp span { min-height: 1em; }   /* empty while it scrambles in: no CLS */
+#how .how__stamp i { width: 7px; height: 7px; border-radius: 50%; background: var(--focus); box-shadow: 0 0 10px var(--focus); }
+
+/* ---------------------------------------------------------------- mobile + reduced: one interleaved column */
+@media (max-width: 899px), (prefers-reduced-motion: reduce) {
+  #how .how__stage { padding-block: var(--sec-pad); }
+  #how .how__grid { display: flex; flex-direction: column; position: relative; max-width: 760px; }
+  #how .how__copy, #how .how__steps, #how .how__view, #how .how__scene, #how .how__rig, #how .how__tags { display: contents; }
+  #how .how__leaders, #how .how__glow, #how .how__dot { display: none; }
+  #how .how__eyebrow { order: 0; } #how .how__title { order: 1; margin-bottom: 8px; }
+  /* 01 → original + copy, 02 → strip, 03 → desktop, 04 → done */
+  #how .how__step:nth-child(1) { order: 2; }  #how .how__tag:nth-child(1) { order: 3; }  #how .how__plane--orig  { order: 4; }
+  #how .how__tag:nth-child(2) { order: 5; }   #how .how__plane--copy  { order: 6; }
+  #how .how__step:nth-child(2) { order: 7; }  #how .how__tag:nth-child(3) { order: 8; }  #how .how__plane--strip { order: 9; }
+  #how .how__step:nth-child(3) { order: 10; } #how .how__tag:nth-child(4) { order: 11; } #how .how__plane--desk  { order: 12; }
+  #how .how__step:nth-child(4) { order: 13; }
+  #how .how__stamp { order: 14; align-self: flex-start; margin: 22px 0 0 30px; max-width: calc(100% - 30px); white-space: normal; line-height: 1.4; }
+  #how .how__foot { order: 15; margin: 40px 0 0 30px; }
+
+  #how .how__step, #how .how__tag, #how .how__plane { margin-left: 30px; }
+  #how .how__step { margin-top: 40px; grid-template-columns: 1fr; gap: 10px; }
+  #how .how__step p { font-size: clamp(1.0625rem, 4.4vw, 1.3rem); }
+  #how .how__n::before { content: ""; position: absolute; left: -27px; top: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--black); box-shadow: 0 0 0 1px var(--fg-3); transition: background var(--d-ui), box-shadow var(--d-ui); }
+  #how .how__step.is-on .how__n::before { background: var(--fg); box-shadow: 0 0 0 1px var(--fg), 0 0 10px rgba(255,255,255,.5); }
+  #how .how__tag { list-style: none; margin-top: 18px; margin-bottom: 10px; font: 450 10.5px/1.5 var(--f-mono); font-stretch: 87.5%; letter-spacing: .05em; color: var(--fg-2); overflow-wrap: anywhere; }
+  #how .how__plane { position: relative; width: calc(100% - 30px); aspect-ratio: 16 / 10; }
+  #how .how__plane--copy { margin-block: 7px; }
+  /* the joining line, drawn by scroll (JS sets --l0/--lh; --draw scrubs) */
+  #how .how__grid::before { content: ""; position: absolute; z-index: 0; left: calc(var(--margin) + 3px); top: var(--l0, 0); height: var(--lh, 0); width: 1px;
+    background: linear-gradient(var(--fg-3), var(--line-2)); transform-origin: 0 0; transform: scaleY(var(--draw, 1)); }
+  #how { --sep: .6; }
+  #how .how__plane--desk .how__wp { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { #how { --rim: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  #how .how__step { color: var(--fg); }
+  #how .how__step .how__n::before { background: var(--fg); }
+  #how .how__plane, #how .how__step, #how .how__n::before { transition: none; }
+}

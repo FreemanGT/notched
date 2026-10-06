@@ -1,0 +1,35 @@
+<!doctype html>
+<!-- Source of site/assets/og.png (1200x630). Render:
+     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --hide-scrollbars --force-device-scale-factor=1 \
+       --window-size=1200,630 --screenshot=site/assets/og.png "file://$PWD/web/og.html" -->
+<html><head><meta charset="utf-8"><style>
+@font-face { font-family: B; src: url(../site/fonts/bricolage.woff2) format("woff2"); font-weight: 200 800; font-stretch: 75% 100%; }
+@font-face { font-family: M; src: url(../site/fonts/martian-mono.woff2) format("woff2"); }
+html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #000; color: #F3F1EC; }
+.screen { position: absolute; inset: 0 0 0 520px; overflow: hidden; border-radius: 0 0 0 0;
+  background:
+    radial-gradient(18% 22% at 64% 58%, rgb(255 205 150 / .9), transparent 70%),
+    linear-gradient(180deg, #3b3f8f 0%, #7a5aa6 34%, #c9789a 62%, #f0a77f 100%); }
+.hill { position: absolute; left: -10%; right: -10%; border-radius: 50% 50% 0 0; }
+.h1 { bottom: -140px; height: 300px; background: #b0607a; opacity: .75; transform: rotate(-4deg); }
+.h2 { bottom: -190px; height: 300px; background: #6b3c63; transform: rotate(3deg); }
+.fade { position: absolute; inset: 0; background: linear-gradient(90deg, #000 0%, rgb(0 0 0 / .55) 22%, transparent 50%); }
+.bar { position: absolute; inset: 0 0 auto; height: 44px; background: #000; display: flex; align-items: center; gap: 22px; padding: 0 28px;
+  font: 600 16px/1 -apple-system, sans-serif; color: #fff; }
+.bar span { font-weight: 400; opacity: .9 } .bar .r { margin-left: auto; font-weight: 500 }
+.f { position: absolute; top: 44px; width: 20px; height: 20px; }
+.f.l { left: 0; background: radial-gradient(circle at 100% 100%, transparent 19.5px, #000 20px); }
+.f.r { right: 0; background: radial-gradient(circle at 0 100%, transparent 19.5px, #000 20px); }
+.copy { position: absolute; left: 72px; top: 92px; width: 640px; }
+.eye { font: 400 15px/1 M, monospace; letter-spacing: .08em; text-transform: uppercase; color: #A9A7A1; }
+h1 { margin: 26px 0 0; font: 800 124px/.9 B, sans-serif; font-stretch: 80%; letter-spacing: -.035em; }
+p { margin: 30px 0 0; font: 400 28px/1.3 B, sans-serif; color: #A9A7A1; width: 470px; }
+.url { position: absolute; left: 72px; bottom: 56px; font: 400 15px/1 M, monospace; letter-spacing: .06em; color: #8C8A85; }
+</style></head><body>
+<div class="screen"><i class="hill h1"></i><i class="hill h2"></i><div class="fade"></div>
+  <div class="bar"><b>Notched</b><span>File</span><span>Edit</span><span>View</span><span class="r">Tue 9:41 PM</span></div>
+  <i class="f l"></i><i class="f r"></i></div>
+<div class="copy"><div class="eye">Notched · free for macOS</div><h1>Black out<br>the notch.</h1>
+<p>A black menu bar baked into your wallpaper. The notch disappears.</p></div>
+<div class="url">notched.vercel.app</div>
+</body></html>

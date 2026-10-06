@@ -7,3 +7,4 @@ site/downloads/*.delta
 .gstack/
 Vendor/
 .vercel/
+web/node_modules/

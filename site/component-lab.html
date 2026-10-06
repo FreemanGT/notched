@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Component Lab</title>
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/component.css">
+<style>
+  body { margin: 0; background: #000; color: #F3F1EC; font: 14px/1.5 var(--f-mac); }
+  main { max-width: 1200px; margin: 0 auto; padding: 32px 16px 80px; }
+  h2 { font: 600 12px/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: #A9A7A1; margin: 48px 0 16px; }
+  .pair { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  .pair figure { margin: 0; position: relative; max-width: 100%; }
+  .pair img { max-width: 100%; height: auto; }
+  .pair figcaption { font: 12px var(--f-mono); color: #8C8A85; margin-top: 8px; }
+  .light-bg { background: #d9d9de; padding: 20px; border-radius: 12px; }
+  .ghost { position: absolute; top: 20px; left: 20px; width: 340px; opacity: .5; pointer-events: none; display: none; }
+  .ghosting .ghost { display: block; }
+  .ctl { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; margin: 16px 0; font: 12px var(--f-mono); color: #A9A7A1; }
+  .ctl label { display: flex; gap: 8px; align-items: center; }
+  .ctl button { font: inherit; color: #fff; background: #141416; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+  #disp { width: 100%; max-width: 980px; }
+  .minis { display: flex; gap: 16px; flex-wrap: wrap; }
+  .minis > div { width: 240px; }
+  .vp { position: relative; height: 340px; border-radius: 12px; overflow: hidden; }
+</style>
+</head>
+<body>
+<main>
+  <h1 style="font:600 20px var(--f-mac);margin:0">Notched component lab</h1>
+  <p style="color:#A9A7A1;margin:4px 0 0">Real renders (left) beside the HTML recreation (right). <a href="?ghost=1" style="color:#6BE3D0">Overlay PNG at 50%</a> · <a href="?t=.5" style="color:#6BE3D0">dusk</a> · <a href="?t=.75" style="color:#6BE3D0">night</a></p>
+
+  <h2>Menu-bar window: light</h2>
+  <div class="pair">
+    <figure class="light-bg"><img src="/assets/popover-light.png" width="340" alt="Real Notched window, light"><figcaption>popover-light.png</figcaption></figure>
+    <figure class="light-bg"><div id="popL"></div><img class="ghost" src="/assets/popover-light.png" alt=""><figcaption>recreation</figcaption></figure>
+  </div>
+  <h2>Menu-bar window: dark (drives the display below)</h2>
+  <div class="pair">
+    <figure style="padding:20px"><img src="/assets/popover-dark.png" width="340" alt="Real Notched window, dark"><figcaption>popover-dark.png</figcaption></figure>
+    <figure style="padding:20px"><div id="popD"></div><img class="ghost" src="/assets/popover-dark.png" alt=""><figcaption>recreation</figcaption></figure>
+  </div>
+
+  <h2>Display screen + setters</h2>
+  <div class="ctl">
+    <label>band <input id="band" type="range" min="0" max="1" step=".01" value="0"></label>
+    <label>radius <input id="radius" type="range" min="0" max="30" step="1" value="14"></label>
+    <label>time <input id="time" type="range" min="0" max="1" step=".01" value=".25"></label>
+    <button data-a="on">band on</button><button data-a="off">band off</button>
+    <button data-a="wp">next wallpaper</button><button data-a="d1">1 display</button><button data-a="d3">3 displays</button>
+    <button data-a="bio">built-in only</button><button data-a="menu">menu text</button><button data-a="pulse">pulse</button><button data-a="proc">process</button><button data-a="icon">status icon</button>
+  </div>
+  <div id="disp"></div>
+
+  <h2>Mini + preview + viewport</h2>
+  <div class="minis"><div id="m1"></div><div id="m2"></div><div style="width:304px" id="m3"></div></div>
+  <div class="vp" style="margin-top:16px"><div id="vp"></div></div>
+</main>
+<script type="module">
+  import { createScreen, createPopover, createStore, SETTINGS_DEFAULT } from '/js/lib/component.js';
+  const q = new URLSearchParams(location.search);
+  if (q.has('ghost')) document.body.classList.add('ghosting');
+  const settings = createStore({ ...SETTINGS_DEFAULT, on: true });
+  const disp = createScreen(document.getElementById('disp'), { mode: 'display', interactive: true, parallax: true, follow: true, settings });
+  const popD = createPopover(document.getElementById('popD'), { store: settings, mirror: disp, appearance: 'dark' });
+  const popL = createPopover(document.getElementById('popL'), { store: createStore({ ...SETTINGS_DEFAULT, on: true, dynamic: true }), appearance: 'light' });
+  if (q.has('still')) { popL.store.set({ dynamic: false }); settings.set({ dynamic: false }); }
+  const minis = ['m1', 'm2'].map((id, i) => createScreen(document.getElementById(id), { mode: 'mini', interactive: true }));
+  minis[1].setBand(1, { duration: 0 }); minis[1].setTime(.75, { duration: 0 });
+  const pv = createScreen(document.getElementById('m3'), { mode: 'preview' }); pv.setBand(1, { duration: 0 });
+  const vp = createScreen(document.getElementById('vp'), { mode: 'viewport', interactive: true, parallax: true });
+  window.lab = { disp, popD, popL, minis, pv, vp, settings };
+  const $ = id => document.getElementById(id);
+  $('band').oninput = e => { disp.setBand(+e.target.value, { duration: 0 }); vp.setBand(+e.target.value, { duration: 0 }); };
+  $('radius').oninput = e => { disp.setRadius(+e.target.value, { duration: 0 }); vp.setRadius(+e.target.value, { duration: 0 }); };
+  $('time').oninput = e => { settings.set({ dynamic: false }); disp.setTime(+e.target.value, { duration: 0 }); vp.setTime(+e.target.value, { duration: 0 }); };
+  let menu = 0, ico = false, bio = false;
+  document.querySelector('.ctl').addEventListener('click', e => {
+    const a = e.target.dataset.a; if (!a) return;
+    ({ on: () => disp.setBand(1), off: () => disp.setBand(0, { ease: 'swallow', duration: 600 }), wp: () => disp.setWallpaper('next'),
+       d1: () => disp.setDisplays(1), d3: () => disp.setDisplays(3), bio: () => disp.setBuiltInOnly(bio = !bio),
+       menu: () => disp.setMenuText(['dark', 'white', 'auto'][menu++ % 3]), pulse: () => disp.pulse(), proc: () => disp.process(900),
+       icon: () => disp.setStatusIcon((ico = !ico) ? 'hidden' : 'normal') })[a]();
+  });
+</script>
+</body>
+</html>

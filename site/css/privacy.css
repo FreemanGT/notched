@@ -1,0 +1,82 @@
+/* #privacy (SPEC §5.6): paper interlude. Black strip + concave fillets in, statements swept into menu bars. */
+#privacy {
+  --rmax: clamp(40px, 8vw, 120px);
+  --pv-gap: clamp(28px, 5vw, 72px);   /* paper above the band: the band is a figure on paper, not part of the black above */
+  position: relative; overflow: clip;
+  padding-top: calc(var(--pv-gap) + var(--mb));
+}
+@media (max-width: 899px) { #privacy { --rmax: 48px; } }
+
+/* ---- band + concave fillets, as WallpaperRenderer bakes them: black quarter-circle fillets hang into the paper
+   under each end of the band. Radius steps 0 → 10 → 14 → 20 pt (Small / Medium / Large) as the label changes.
+   Fillets are drawn at --rmax (= 20 pt) and scaled (transform only) to the live radius. */
+#privacy .pv__strip { position: absolute; left: 0; right: 0; top: var(--pv-gap); height: var(--mb); z-index: 1; }
+#privacy .pv__strip::before {
+  content: ""; position: absolute; inset: 0; background: #000;
+  transform: scaleX(var(--pv-x, 1)); will-change: transform;
+}
+#privacy .pv__fillet {
+  position: absolute; top: calc(100% - 1px); width: var(--rmax); height: var(--rmax);
+  transform: scale(var(--pv-s, 1)); will-change: transform;
+}
+#privacy .pv__fillet--l { left: 0; transform-origin: 0 0; background: radial-gradient(circle at 100% 100%, transparent calc(var(--rmax) - .6px), #000 var(--rmax)); }
+#privacy .pv__fillet--r { right: 0; transform-origin: 100% 0; background: radial-gradient(circle at 0 100%, transparent calc(var(--rmax) - .6px), #000 var(--rmax)); }
+/* Label sits on paper inside the left fillet's arc (≥ .7 r from the circle's centre at every step). */
+#privacy .pv__r {
+  position: absolute; top: calc(100% + var(--rmax) * .5); left: calc(var(--rmax) * .5);
+  font-size: 11px; letter-spacing: .08em; color: var(--on-paper-2); white-space: nowrap;
+  opacity: var(--pv-o, 1); transition: opacity .3s;
+}
+#privacy .pv__rv { font-weight: inherit; color: #000; }
+
+/* ---- body */
+#privacy .pv__body { padding-block: calc(var(--sec-pad) + var(--rmax) * .4) var(--sec-pad); }
+#privacy .pv__eyebrow { color: var(--on-paper-2); margin-bottom: clamp(20px, 3vw, 40px); }
+#privacy .pv__list { margin: 0; font: inherit; }
+#privacy .pv__row {
+  position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--gutter);
+  padding-block: clamp(10px, 1.4vw, 22px);
+}
+#privacy .pv__row:first-child { border-top: 1px solid var(--paper-line); }
+#privacy .pv__rule {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--paper-line);
+  transform-origin: 0 50%;
+}
+#privacy .pv__st {
+  display: inline-block; white-space: nowrap; color: #000;
+  font: 800 var(--t-statement)/.92 var(--f-display); letter-spacing: -.04em; font-variation-settings: "opsz" 96;
+  padding: .06em .14em .1em;   /* the bar breathes like a menu bar and starts on col 1 */
+}
+#privacy .pv__st .bandtext { color: var(--paper); }
+#privacy .pv__meta {
+  flex: none; font-size: 11px; letter-spacing: .06em; color: var(--on-paper-2);
+  text-transform: uppercase; align-self: flex-end; padding-bottom: .4em;
+}
+#privacy .pv__meta b { color: #000; font-weight: 700; margin-left: .6em; }
+
+#privacy .pv__foot { margin-top: clamp(48px, 7vw, 112px); row-gap: 28px; }
+#privacy .pv__lede { grid-column: 1 / span 7; margin: 0; color: var(--on-paper-2); text-wrap: pretty; }
+#privacy .pv__lede strong { color: #000; font-weight: 640; }
+#privacy .pv__path { font-family: var(--f-mono); font-size: .78em; letter-spacing: -.01em; color: #000; overflow-wrap: anywhere; }
+#privacy .pv__src {
+  grid-column: 1 / span 7; justify-self: start; color: #000;
+  display: inline-flex; align-items: center; min-height: 24px;
+  font: 600 17px/1.2 var(--f-text); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .28em;
+  transition: text-decoration-thickness var(--d-ui) var(--e-out), text-underline-offset var(--d-ui) var(--e-out);
+}
+@media (pointer: coarse) { #privacy .pv__src { min-height: 44px; } }
+#privacy .pv__src:hover { text-decoration-thickness: 2px; text-underline-offset: .2em; }
+#privacy .pv__src:focus-visible { outline: 2px solid var(--focus-paper); outline-offset: 4px; border-radius: 2px; }
+
+@media (max-width: 899px) {
+  #privacy .pv__st { font-size: 13vw; }
+  #privacy .pv__meta { display: none; }
+  #privacy .pv__lede, #privacy .pv__src { grid-column: 1 / -1; }
+}
+/* SPEC: wdth 75 below 420px. At 13vw the long line is ~100vw wide in every phone/tablet width, so it narrows below 900px. */
+@media (max-width: 899px) { #privacy .pv__st--long { font-variation-settings: "opsz" 96, "wdth" 85; } }
+@media (max-width: 419px) { #privacy .pv__st--long { font-variation-settings: "opsz" 96, "wdth" 78; } }
+
+/* Reduced / no-JS end state: final black bars, fillets at max. */
+html.still #privacy .pv__st, html:not(.js) #privacy .pv__st { background: #000; color: var(--paper); }
+html.still #privacy .pv__st .bandtext { display: none; }

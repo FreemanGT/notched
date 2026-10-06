@@ -1,0 +1,105 @@
+/* #try (SPEC §5.3). Scope every rule under #try.
+   Every size here is reserved in CSS, so try.js's init changes no layout (no section height jump, no scroll-anchor drift). */
+#try { background: var(--black); min-height: 100vh; overflow-x: clip; }
+
+#try .try__head { position: relative; z-index: 2; }
+#try .try__head .t-h2 { margin: 0; }
+#try .try__sub { margin: 1.5rem 0 0; color: var(--fg-2); max-width: 34em; }
+
+/* ---- stage: the mirror, with the window hanging from its own Notched icon (JS sets --pop-x/--pop-y/--pop-k) ---- */
+#try .try__stage { position: relative; margin-top: clamp(48px, 8vh, 96px); --pop-x: 62%; --pop-y: 30px; }
+#try .try__mirror { position: relative; z-index: 1; min-height: 0; }   /* min-height:0: an aspect-ratio box would grow to its content */
+
+/* the Notched icon's open capsule while the window is down */
+#try .try__stage.is-open .nt-glass--main .nt-mb__icon::before { content: ""; position: absolute; inset: -3px -6px; border-radius: 4px; background: currentColor; opacity: .2; pointer-events: none; }
+
+/* focus pull on radius change: dim everything but the top-left corner */
+#try .try__pull { position: absolute; inset: 0; z-index: 8; pointer-events: none; opacity: 0;
+  background: rgba(0,0,0,.4);   /* a dim, not a blur: backdrop-filter over the drifting wallpaper re-blurs every frame */
+  -webkit-mask-image: radial-gradient(circle at 0 0, transparent 0, transparent 14%, #000 34%); mask-image: radial-gradient(circle at 0 0, transparent 0, transparent 14%, #000 34%); }
+
+#try .try__note { display: none; margin: 10px 0 0; color: var(--fg-3); }
+
+#try .try__right { position: absolute; z-index: 2; top: var(--pop-y); left: var(--pop-x); width: 340px; }
+#try .try__wire { position: absolute; left: var(--wire-x, 24px); bottom: 100%; width: 1px; height: var(--wire-h, 6px);
+  background: linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.55)); transform-origin: top; }
+#try .try__popwrap { position: relative; transform: scale(var(--pop-k, 1)); transform-origin: 0 0; }
+#try .try__pop { transform-origin: var(--wire-x, 24px) 0; }
+
+/* "your turn": a soft pulse ring on the switch after the demo flip */
+#try .try__turn { position: absolute; inset: 0; border-radius: 12px; pointer-events: none; opacity: 0; transition: opacity .5s var(--e-out);
+  box-shadow: 0 0 0 2px var(--blue); }
+#try .try__turn::before { content: ""; position: absolute; inset: 0; border-radius: inherit; animation: try-ring 1.8s var(--e-out) infinite; }
+#try .try__turn b { position: absolute; right: calc(100% + 12px); top: 50%; transform: translateY(-50%); font: 500 10px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--blue); white-space: nowrap; }
+#try .is-turn .try__turn { opacity: 1; }
+@keyframes try-ring { 0% { box-shadow: 0 0 0 0 rgba(17,125,255,.6); } 75%, 100% { box-shadow: 0 0 0 14px rgba(17,125,255,0); } }
+
+/* foot: live plate (left) and the window's DARK | LIGHT (right) */
+#try .try__foot { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; margin-top: 18px; }
+#try .try__plate { margin: 0; min-width: 0; color: var(--fg-3); letter-spacing: .06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#try .try__plate span { color: var(--fg-2); }
+#try .try__look { display: flex; align-items: center; gap: 10px; color: var(--fg-3); letter-spacing: .08em; }
+#try .try__look button { all: unset; cursor: pointer; padding: 10px 2px; min-height: 24px; text-transform: uppercase; color: var(--fg-3); transition: color .16s; position: relative; }
+#try .try__look button[aria-checked="true"] { color: var(--fg); }
+#try .try__look button[aria-checked="true"]::after { content: ""; position: absolute; left: 2px; right: 2px; bottom: 6px; height: 1px; background: currentColor; }
+#try .try__look button:hover { color: var(--fg-2); }
+#try .try__look button[aria-checked="true"]:hover { color: var(--fg); }
+#try .try__look button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 3px; }
+
+/* ---- desk: the external display sits beside the built-in one at reduced scale (24% | gap | 73%) ---- */
+@media (min-width: 900px) {
+  #try .try__head { max-width: 50%; }
+  #try .try__stage { min-height: 660px; }                 /* the window (≈620 px) may hang below the screen here */
+  #try .try__mirror { aspect-ratio: 16 / 7.665; }         /* = the built-in glass: 73% of the width × 10.5/16 */
+  #try .try__screen { height: 100%; }
+  #try .try__mirror .nt-row { justify-content: space-between; gap: 0; }
+  #try .try__mirror .nt-glass { aspect-ratio: 16 / 10.5; }
+  #try .try__mirror .nt-glass--main { flex: 0 0 73%; }
+  #try .try__mirror .nt-glass--ext { flex: 0 0 24%; aspect-ratio: 16 / 10; }
+}
+
+/* ---- one composed frame: head over the external display, the window inside the built-in screen ---- */
+@media (min-width: 1200px) and (min-height: 700px) {
+  #try { --cw: calc(min(100vw, var(--max)) - 2 * var(--margin));
+    --w: min(var(--cw), calc((100vh - var(--mb) - 150px) * 2.087));   /* fits mirror + foot under the menu bar */
+    height: 100vh; min-height: 0; padding-block: 0; }
+  #try .try__pin { height: 100vh; padding-top: var(--mb); display: flex; align-items: center; }
+  #try .try__frame { display: grid; grid-template-columns: 100%; }
+  #try .try__head { grid-area: 1 / 1; align-self: start; max-width: none; width: calc(var(--cw) - var(--w) * .73 - 24px); }
+  #try .try__head .t-h2 { font-size: clamp(2.4rem, 4.4vw, 4.25rem); }
+  #try .try__sub { margin-top: 1.25rem; font-size: clamp(1rem, 1.2vw, 1.15rem); }
+  #try .try__stage { grid-area: 1 / 1; justify-self: end; width: var(--w); margin-top: 0; min-height: 0; }
+  #try .try__foot { grid-area: 2 / 1; }
+}
+/* pinned for one viewport (sticky: no pin-spacer, no CLS on enter/exit) */
+@media (min-width: 1200px) and (min-height: 700px) and (prefers-reduced-motion: no-preference) {
+  #try { height: 200vh; }
+  #try .try__pin { position: sticky; top: 0; }
+}
+
+/* ---- mobile: stack; notch-region crop at 2x; the window scaled to fit (its box is reserved by aspect-ratio) ---- */
+@media (max-width: 899px) {
+  #try .try__mirror { margin: 0 calc(-1 * var(--margin)); aspect-ratio: 16 / 6.4; overflow: clip; }
+  #try .try__mirror .nt-glass { aspect-ratio: 16 / 6.2; }
+  #try .try__mirror .nt-screen { width: 200%; margin-left: -50%; }
+  #try .try__note { display: block; }
+  #try .try__right { position: relative; top: auto; left: auto; width: auto; margin-top: 40px; }
+  #try .try__wire { display: none; }
+  #try .try__popwrap { width: min(340px, 100%); min-height: 0; margin-inline: auto; aspect-ratio: 340 / 608; transform: none; }   /* min-height:0 or the box grows to the unscaled content */
+  #try .try__pop { width: 340px; transform: scale(var(--pop-s, 1)); transform-origin: 0 0; }
+  #try .try__foot { flex-direction: column; justify-content: center; margin-top: 24px; }
+  #try .try__plate { white-space: normal; text-align: center; }
+}
+
+/* touch: whole checkbox rows become 44 px targets; controls keep their 1:1 macOS look (component.css adds the ::after pads) */
+@media (pointer: coarse) and (max-width: 899px) {
+  #try .nt-pop__chk { align-self: stretch; min-height: 44px; }
+  #try .nt-pop__chk::after { inset: 0 -4px; }
+  #try .try__popwrap { aspect-ratio: 340 / 767; }
+}
+
+/* reduced */
+@media (prefers-reduced-motion: reduce) {
+  #try .try__turn::before { animation: none; }
+  #try .try__turn { transition: opacity .12s linear; }
+}

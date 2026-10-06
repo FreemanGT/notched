@@ -1,0 +1,8 @@
+{
+  "name": "notched-web",
+  "description": "Notched site sources: template + sections -> ../site/index.html",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "node build.mjs", "qa": "node qa.mjs" },
+  "devDependencies": { "puppeteer-core": "^25.12.0" }
+}

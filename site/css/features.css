@@ -1,0 +1,123 @@
+/* #features (SPEC §5.4). Every rule scoped under #features. */
+#features { --fx-focus: var(--focus); }
+#features .feat__head { max-width: 22ch; margin-bottom: clamp(48px, 8vh, 96px); }
+#features .feat__head .t-h2 { margin: 0; }
+
+/* ---------- desk layout ---------- */
+#features .feat__grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); }
+#features .feat__chapters { grid-column: 1 / 6; grid-row: 1; }
+#features .feat__col { grid-column: 6 / 13; grid-row: 1; position: relative; }   /* first in the DOM (rail before chapters), right on screen */
+#features .feat__chips { display: none; }
+
+#features .chapter { min-height: 78vh; display: flex; flex-direction: column; justify-content: center; padding-block: 6vh; }
+#features .chapter__num { color: var(--fg-3); }
+#features .chapter__fig { margin: .35em 0 .2em; font-size: min(var(--t-figure), 10.5vw); overflow: clip; overflow-clip-margin: .06em; padding-block: .04em; white-space: nowrap; color: var(--fg); }
+#features .chapter__in { display: inline-flex; align-items: baseline; gap: .12em; will-change: transform; }
+#features .fig__v { font-variant-numeric: tabular-nums; line-height: 1; } /* = roll() cell height, so the first roll never grows the line */
+#features .fig__u { font-size: .32em; letter-spacing: .02em; color: var(--fg-3); transform: translateY(-.1em); }
+#features .chapter .t-h3 { margin: 0 0 .7rem; max-width: 18ch; }
+#features .chapter__body { margin: 0; max-width: 36ch; color: var(--fg-2); }
+#features .chapter__toy { margin-top: 28px; }
+#features .chapter__screen { display: none; }
+#features .chapter__small { margin: 40px 0 0; max-width: 44ch; color: var(--fg-3); font-size: 14px; line-height: 1.5; }
+
+/* ---------- the sticky stage ---------- */
+#features .feat__stage { position: sticky; top: calc(var(--mb) + 6vh); height: 76vh; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(16px, 2vw, 32px); align-items: center; }
+#features .feat__rail { display: flex; flex-direction: column; gap: 4px; align-self: center; }
+#features .feat__rail button { position: relative; display: flex; align-items: center; gap: 10px; min-height: 32px; padding: 0 12px 0 10px; border-radius: 999px; background: transparent; color: var(--fg-3);
+  white-space: nowrap; transition: color var(--d-ui) var(--e-out), background-color var(--d-ui) var(--e-out), box-shadow var(--d-ui) var(--e-out); }
+#features .feat__rail button i { display: block; width: 2px; height: 8px; border-radius: 2px; background: currentColor; opacity: .6; transition: height var(--d-band) var(--e-spring, var(--e-out)), opacity var(--d-ui); }
+#features .feat__rail button:hover { color: var(--fg-2); }
+#features .feat__rail button.is-on { color: #fff; background: #000; box-shadow: inset 0 0 0 1px var(--line-2), 0 1px 0 var(--rim) inset; }
+#features .feat__rail button.is-on i { height: 28px; opacity: 1; background: var(--fx-focus); }
+#features .feat__view { position: relative; height: 100%; overflow: clip; border-radius: 28px; background: radial-gradient(120% 90% at 50% 0%, var(--ink-2), #000 70%); box-shadow: inset 0 0 0 1px var(--line); isolation: isolate; }
+#features .feat__spill { position: absolute; inset: 18% 6% 10%; z-index: 0; overflow: hidden; border-radius: 40%; filter: blur(60px) saturate(1.3); opacity: .4; transform: scale(1.15); pointer-events: none; }
+#features .feat__tilt { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; padding: 0 4%; transform: perspective(1600px) rotateX(6deg); transform-origin: 50% 40%;
+  -webkit-mask-image: linear-gradient(#000 74%, transparent 96%); mask-image: linear-gradient(#000 74%, transparent 96%); }
+#features .feat__cam { position: relative; width: 100%; transform-origin: 0 0; will-change: transform; }
+#features .nt-screen--display .nt-glass--main { aspect-ratio: 16 / 10; }
+#features .nt-screen--display .nt-glass--ext { aspect-ratio: 16 / 10; }
+/* externals never take flex space: the laptop keeps its size, they hang either side and the camera pulls back (transform only, no CLS) */
+#features .nt-screen--display .nt-multi .nt-glass--main, #features .nt-screen--display.nt-multi .nt-glass--main { flex-basis: 100%; }
+#features .nt-screen--display .nt-glass--ext { position: absolute; bottom: 0; width: 80%; flex: none; aspect-ratio: 16 / 10; }
+#features .nt-screen--display .nt-glass--ext:first-child { right: 106%; }
+#features .nt-screen--display .nt-glass--ext:last-child { left: 106%; }
+
+/* readout plate + stage chip */
+#features .feat__readout { position: absolute; z-index: 3; left: 20px; bottom: 20px; margin: 0; display: flex; align-items: center; gap: .55em; flex-wrap: wrap; max-width: calc(100% - 40px);
+  padding: 9px 12px; border-radius: 10px; background: rgba(0,0,0,.72); box-shadow: inset 0 0 0 1px var(--line); color: var(--fg-2); }
+#features .feat__readout:empty { display: none; }
+#features .feat__readout span { color: var(--fg-3); transition: color var(--d-ui); }
+#features .feat__readout span.is-on { color: #fff; }
+#features .fx-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--fx-focus); box-shadow: 0 0 10px var(--fx-focus); animation: fx-blink 2s steps(1, end) infinite; }
+#features .feat__view.is-off .fx-dot { animation-play-state: paused; }
+@keyframes fx-blink { 0% { opacity: 1; } 12% { opacity: .15; } }
+#features .feat__chip { position: absolute; z-index: 3; right: 20px; top: 20px; display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 10px; border-radius: 999px; background: #000; color: #fff;
+  box-shadow: inset 0 0 0 1px var(--line-2); opacity: 0; transform: translateY(-8px); transition: opacity var(--d-ui) var(--e-out), transform var(--d-ui) var(--e-out); pointer-events: none; }
+#features .feat__chip.is-on { opacity: 1; transform: none; }
+#features .feat__chip i { width: 14px; height: 14px; border-radius: 4px; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.6); transition: background-color var(--d-micro), box-shadow var(--d-micro); }
+#features .feat__chip.is-checked i { background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3.5 7.2 6 9.6l4.6-5' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat; box-shadow: none; }
+
+/* overlays inside the product glass (they inherit --pt and --r) */
+#features .fx-dim { position: absolute; z-index: 6; left: 0; top: var(--nt-mb); width: calc(var(--r) * var(--pt)); height: calc(var(--r) * var(--pt)); opacity: 0; pointer-events: none; --k: 1; }
+#features .fx-dim svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: none; stroke: var(--fx-focus); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+#features .fx-dim path { vector-effect: non-scaling-stroke; }
+#features .fx-dim__arc, #features .fx-dim__r { stroke-dasharray: 1; stroke-dashoffset: var(--k); }
+#features .fx-dim__r { stroke-width: .8; opacity: .8; }
+#features .fx-dim__t { stroke-width: .8; }
+#features .fx-dim b { position: absolute; left: 112%; top: 100%; font: 600 4px/1 var(--f-mono); letter-spacing: .04em; color: var(--fx-focus); white-space: nowrap; transform: translateY(-50%); }
+#features .fx-ring { position: absolute; left: 50%; top: 50%; width: 260%; height: auto; aspect-ratio: 1; transform: translate(-50%, -50%) rotate(-90deg); fill: none; stroke: var(--fx-focus); stroke-width: 2.4; opacity: 0;
+  stroke-dasharray: 1; stroke-dashoffset: var(--k, 1); overflow: visible; pointer-events: none; transition: opacity var(--d-micro); }
+
+/* ---------- toys ---------- */
+#features .toy-arc { position: relative; display: block; width: min(320px, 100%); height: 72px; cursor: pointer; --v: 0; --y: 1; container-type: inline-size; }
+#features .toy-arc__svg { position: absolute; inset: 8px 0 0; width: 100%; height: 64px; fill: none; stroke: var(--line-2); stroke-width: 1.5; stroke-dasharray: 2 5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+#features .toy-arc__sun { position: absolute; left: -4px; top: 58px; width: 20px; height: 20px; border-radius: 50%;
+  transform: translate(calc(var(--v) * (100cqw - 12px)), calc((var(--y) - 1) * 51px)); background: radial-gradient(circle, #FFE7B8 0 38%, #FFB36B 60%, transparent 62%); box-shadow: 0 0 22px 4px rgba(255,179,107,.45); pointer-events: none; transition: box-shadow var(--d-ui); }
+#features .toy-arc input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; touch-action: pan-y; }
+#features .toy-arc:has(input:focus-visible) { outline: 2px solid var(--fx-focus); outline-offset: 6px; border-radius: 12px; }
+#features .toy-arc:hover .toy-arc__sun { box-shadow: 0 0 30px 8px rgba(255,179,107,.6); }
+
+#features .toy-check { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px 0 12px; border-radius: 999px; background: #000; color: #fff; box-shadow: inset 0 0 0 1px var(--line-2); cursor: pointer; }
+#features .toy-check input { appearance: none; -webkit-appearance: none; width: 16px; height: 16px; margin: 0; border-radius: 4px; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.6); cursor: pointer; transition: background-color var(--d-micro); }
+#features .toy-check input:checked { background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3.5 7.2 6 9.6l4.6-5' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat; box-shadow: none; }
+#features .toy-check:has(input:focus-visible) { outline: 2px solid var(--fx-focus); outline-offset: 3px; }
+#features .toy-check input:focus-visible { outline: none; }
+
+#features .toy-radius { display: inline-flex; align-items: center; gap: 4px; color: var(--fg-3); }
+#features .toy-radius button { min-width: 52px; min-height: 44px; padding: 0 12px; border-radius: 999px; color: var(--fg-2); font: 500 18px/1 var(--f-mono); font-stretch: 87.5%; letter-spacing: -.02em; transition: background-color var(--d-ui) var(--e-out), color var(--d-ui); }
+#features .toy-radius button:hover { color: var(--fg); }
+#features .toy-radius button[aria-checked="true"] { background: #000; color: #fff; box-shadow: inset 0 0 0 1px var(--line-2); }
+
+#features .toy-pill { display: inline-flex; align-items: center; min-height: 44px; padding: 0 22px; border-radius: 999px; background: #000; color: #fff; font: 640 16px/1 var(--f-text); box-shadow: inset 0 0 0 1px var(--line-2), inset 0 1px 0 var(--rim);
+  transition: transform var(--d-micro) var(--e-out), box-shadow var(--d-ui); }
+#features .toy-pill:hover { box-shadow: inset 0 0 0 1px rgba(255,255,255,.4), inset 0 1px 0 var(--rim); }
+#features .toy-pill:active { transform: scale(.97); }
+#features .toy-text { min-height: 44px; padding: 0; color: var(--fg); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 6px; transition: text-decoration-color var(--d-ui); }
+#features .toy-text:hover { text-decoration-color: currentColor; }
+
+/* ---------- mobile: cards ---------- */
+@media (max-width: 899px) {
+  #features .feat__head { max-width: none; margin-bottom: 24px; }
+  #features .feat__col { display: none; }
+  #features .feat__grid { display: block; }
+  #features .feat__chips { display: flex; gap: 8px; margin: 0 calc(-1 * var(--margin)) 24px; padding: 0 var(--margin) 4px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-snap-type: x proximity; }
+  #features .feat__chips::-webkit-scrollbar { display: none; }
+  #features .feat__chips a { flex: none; display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px; background: var(--ink-1); color: var(--fg-2); box-shadow: inset 0 0 0 1px var(--line); scroll-snap-align: start; }
+  #features .chapter { min-height: 0; display: block; margin-bottom: 16px; padding: 20px; border-radius: 28px; background: var(--ink-1); box-shadow: inset 0 0 0 1px var(--line); scroll-margin-top: calc(var(--mb) + 16px); }
+  #features .chapter__fig { font-size: 20vw; margin: 12px 0 14px; }
+  #features .chapter__screen { display: block; position: relative; margin: 20px -4px 0; aspect-ratio: 16 / 10; overflow: clip; border-radius: 18px; background: #000; }
+  #features #feat-2 .chapter__screen { aspect-ratio: 16 / 8; display: flex; align-items: center; }
+  #features .chapter__screen > div { position: relative; width: 100%; transform-origin: 0 0; }
+  #features .chapter__toy { margin-top: 16px; }
+  #features .chapter { position: relative; }
+  /* added after first play: absolute so it never pushes the page (no CLS) */
+  #features .chapter__replay { position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; color: var(--fg-3); }
+  #features .chapter__replay:hover { color: var(--fg); }
+  #features .chapter__small { margin-top: 24px; }
+  #features .feat__readout { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #features .fx-dot { animation: none; }
+  #features .chapter__replay { display: none; }
+}

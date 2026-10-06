@@ -1,0 +1,101 @@
+/* #faq (SPEC §5.7): "Fair questions." on paper. Opening a row sweeps a black menu bar in from the
+   left; the question flips to paper exactly where the bar has reached (dual layer, same 300ms
+   transition), concave fillets curl under the bar's ends at the site radius, then the answer drops. */
+#faq { --sw: 300ms; --pad-x: clamp(12px, 1.4vw, 20px); interpolate-size: allow-keywords; }
+#faq .eyebrow { color: var(--on-paper-2); }
+#faq .faq__head { grid-column: 1 / span 4; align-self: start; margin-bottom: clamp(32px, 6vh, 56px); }
+#faq .faq__title { color: #000; }
+#faq .faq__list { grid-column: 5 / span 8; border-bottom: 1px solid var(--paper-line); }
+@media (min-width: 900px) {
+  #faq .faq__head { position: sticky; top: 20vh; margin-bottom: 0; }
+}
+@media (max-width: 899px) {
+  #faq .faq__head, #faq .faq__list { grid-column: 1 / -1; }
+}
+
+/* ---- row + hairline (a pseudo so it can draw in from the left) ---- */
+#faq .faq__row { position: relative; }
+#faq .faq__row::after {
+  content: ""; position: absolute; inset: 0 0 auto; height: 1px; background: var(--paper-line);
+  transform: scaleX(var(--hl, 1)); transform-origin: left; pointer-events: none;
+}
+
+/* ---- summary: base text in black over a scaleX bar ---- */
+#faq summary {
+  position: relative; isolation: isolate; display: block; cursor: pointer; list-style: none;
+  min-height: 44px; padding: clamp(18px, 2.2vw, 26px) calc(var(--pad-x) + 44px) clamp(18px, 2.2vw, 26px) var(--pad-x);
+  font: 650 var(--t-h3)/1.05 var(--f-display); letter-spacing: -.015em; font-variation-settings: "opsz" 32;
+  color: #000; -webkit-tap-highlight-color: transparent;
+}
+#faq summary::-webkit-details-marker { display: none; }
+#faq summary:focus-visible { outline-offset: 2px; border-radius: 2px; }
+#faq .faq__q { display: block; text-wrap: balance; }
+
+/* the bar: grows from the left on open, exits to the right on close (origin flips with state) */
+#faq summary::before {
+  content: ""; position: absolute; inset: -1px 0 0; z-index: -1; background: #000;
+  transform: scaleX(0); transform-origin: right; transition: transform var(--sw) var(--e-out);
+}
+#faq .faq__row[open] > summary::before { transform: scaleX(1); transform-origin: left; }
+
+/* the paper copy: outer clip owns the leading edge on open, inner clip owns the trailing edge on close */
+#faq .faq__ink {
+  position: absolute; inset: 0; z-index: 1; padding: inherit; color: var(--paper); user-select: none; pointer-events: none;
+  clip-path: inset(0 100% 0 0); transition: clip-path 0s linear var(--sw);
+}
+#faq .faq__ink > span { display: block; text-wrap: balance; clip-path: inset(0 0 0 100%); transition: clip-path var(--sw) var(--e-out); }
+#faq .faq__row[open] .faq__ink { clip-path: inset(0); transition: clip-path var(--sw) var(--e-out); }
+#faq .faq__row[open] .faq__ink > span { clip-path: inset(0); transition: none; }
+
+/* marker: a tiny notch, outlined; fills and turns over as the bar arrives */
+#faq .faq__mk {
+  position: absolute; z-index: 2; right: var(--pad-x); top: 50%; width: 26px; height: 13px; margin-top: -6.5px;
+  fill: transparent; stroke: #000; stroke-width: 1.6; stroke-linejoin: round; overflow: visible;
+  transition: transform var(--sw) var(--e-out), fill 160ms linear, stroke 160ms linear;
+}
+#faq .faq__row[open] .faq__mk {
+  transform: rotate(180deg); fill: var(--paper); stroke: var(--paper);
+  transition: transform var(--sw) var(--e-out), fill 120ms linear 110ms, stroke 120ms linear 110ms;
+}
+@media (hover: hover) and (pointer: fine) {
+  #faq .faq__row:not([open]) > summary:hover .faq__mk { fill: #000; }
+  #faq .faq__row:not([open]) > summary:hover::before { transform: scaleX(.012); transform-origin: left; }
+}
+
+/* concave fillets under both ends of the bar, radius = the site's corner setting (0 when corners are off) */
+#faq summary::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 100%; height: var(--r-site); z-index: 1; pointer-events: none;
+  background:
+    radial-gradient(circle at 100% 100%, transparent calc(var(--r-site) - .5px), #000 var(--r-site)) left top / var(--r-site) var(--r-site) no-repeat,
+    radial-gradient(circle at 0 100%, transparent calc(var(--r-site) - .5px), #000 var(--r-site)) right top / var(--r-site) var(--r-site) no-repeat;
+  transform: scaleY(0); transform-origin: top; transition: transform 140ms var(--e-out);
+}
+#faq .faq__row[open] > summary::after { transform: scaleY(1); transition: transform 420ms var(--e-fillet) calc(var(--sw) - 60ms); }
+
+/* ---- answer ---- */
+#faq .faq__a {
+  padding: calc(var(--r-site) + 14px) var(--pad-x) clamp(24px, 3vw, 36px);
+  opacity: 0; transform: translateY(-10px); transition: opacity 200ms linear, transform 200ms var(--e-out);
+}
+#faq .faq__row[open] .faq__a { opacity: 1; transform: none; transition: opacity 360ms linear 140ms, transform 560ms var(--e-out) 100ms; }
+#faq .faq__a p { max-width: 62ch; font: 420 17px/1.55 var(--f-text); color: var(--on-paper-2); }
+
+/* the drop: animate the content slot's height where the browser supports it; elsewhere it is instant */
+@supports selector(::details-content) {
+  #faq .faq__row::details-content {
+    block-size: 0; overflow: clip;
+    transition: block-size 420ms var(--e-out), content-visibility 420ms allow-discrete;
+  }
+  #faq .faq__row[open]::details-content { block-size: auto; }
+}
+
+/* entrance: the first row's bar waits (open, no layout change) until the list has risen */
+#faq .faq__row.is-pre > summary::before { transform: scaleX(0); }
+#faq .faq__row.is-pre .faq__ink { clip-path: inset(0 100% 0 0); }
+#faq .faq__row.is-pre .faq__mk { transform: none; fill: transparent; stroke: #000; }
+#faq .faq__row.is-pre > summary::after { transform: scaleY(0); }
+#faq .faq__row.is-pre .faq__a { opacity: 0; transform: translateY(-10px); }
+
+@media (prefers-reduced-motion: reduce) {
+  #faq *, #faq *::before, #faq *::after, #faq .faq__row::details-content { transition: none !important; }
+}

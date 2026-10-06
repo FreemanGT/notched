@@ -3,182 +3,500 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Notched: hide the MacBook notch</title>
-<meta name="description" content="Free Mac app that turns the menu bar black so the MacBook notch disappears. Keeps dynamic wallpapers moving and works on every display and Space. macOS 14 or later.">
+<title>Notched: hide the MacBook notch (free for Mac)</title>
+<meta name="description" content="Notched turns your menu bar black so the MacBook notch disappears into the bezel. Free and open source. Keeps dynamic wallpapers moving and works on every display. macOS 14+, Apple silicon.">
 <link rel="canonical" href="https://notched.vercel.app/">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f4f6f8" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0b0c0f" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/png" href="/assets/favicon.png">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<meta name="nt-signup" content="https://script.google.com/macros/s/AKfycbyYJTV8Mm_N77moH5FPesW6b_7Khdt2XHBn9IvVHSbHGw43RxAkXjgibvvWu-QkzNuMRA/exec">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="Notched">
 <meta property="og:url" content="https://notched.vercel.app/">
 <meta property="og:title" content="Notched: hide the MacBook notch">
-<meta property="og:description" content="A free Mac app that turns the menu bar black, so the notch disappears into the bezel.">
+<meta property="og:description" content="Turns your menu bar black so the notch disappears into the bezel. Free and open source for Mac.">
 <meta property="og:image" content="https://notched.vercel.app/assets/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="A MacBook menu bar turned black, with the notch blended in.">
+<meta property="og:image:alt" content="A MacBook screen-top with a black menu bar where the notch has disappeared. Black out the notch.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Notched: hide the MacBook notch">
-<meta name="twitter:description" content="A free Mac app that turns the menu bar black, so the notch disappears into the bezel.">
+<meta name="twitter:description" content="Turns your menu bar black so the notch disappears into the bezel. Free and open source for Mac.">
 <meta name="twitter:image" content="https://notched.vercel.app/assets/og.png">
-
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Notched","operatingSystem":"macOS 14 or later","applicationCategory":"UtilitiesApplication","softwareVersion":"1.0.1","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"license":"https://opensource.org/licenses/MIT","downloadUrl":"https://notched.vercel.app/download","image":"https://notched.vercel.app/assets/icon-512.png","url":"https://notched.vercel.app/","codeRepository":"https://github.com/FreemanGT/notched","author":{"@type":"Person","name":"Yiftach Freeman"},"description":"Free, open-source macOS menu bar app that hides the MacBook notch by turning the menu bar black. Works with dynamic wallpapers, multiple displays and Spaces."}
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="preload" href="/fonts/bricolage.woff2" as="font" type="font/woff2" crossorigin>
+<script>
+/* Before first paint (SPEC §3.2, §4.3): phase from the local clock (?t= override), intro flags, stored prefs. */
+(function () {
+  var d = document.documentElement, q = new URLSearchParams(location.search), t = parseFloat(q.get("t"));
+  if (isNaN(t)) {
+    var n = new Date(), h = n.getHours() + n.getMinutes() / 60;
+    t = h >= 5 && h < 8 ? (h - 5) / 3 * .25 : h >= 8 && h < 17 ? .25 + (h - 8) / 9 * .25 : h >= 17 && h < 20 ? .5 + (h - 17) / 3 * .25 : .75 + ((h - 20 + 24) % 24) / 9 * .25;
+  }
+  t = ((t % 1) + 1) % 1;
+  d.style.setProperty("--t0", t.toFixed(4));
+  d.dataset.phase = ["dawn", "day", "dusk", "night"][Math.round(t * 4) % 4];
+  d.classList.add("js");
+  var still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (still) d.classList.add("still");
+  try {
+    var s = JSON.parse(localStorage.getItem("nt-settings") || "{}");
+    if (s.radius) d.style.setProperty("--r-site-pt", s.radius);
+    if (s.iconHidden) d.classList.add("icon-hidden");
+  } catch (e) {}
+  if (!still && !location.hash) {
+    var seen = false; try { seen = sessionStorage.getItem("nt-intro") === "1"; sessionStorage.setItem("nt-intro", "1"); } catch (e) {}
+    d.classList.add("intro", seen ? "intro--quick" : "intro--full");
+  }
+})();
 </script>
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"How does Notched work?","acceptedAnswer":{"@type":"Answer","text":"Notched saves a copy of your wallpaper with a black strip the height of the menu bar and sets the copy as your desktop picture. The menu bar turns black and the notch blends into it. Your original file is never touched."}},
-{"@type":"Question","name":"How do I turn it off?","acceptedAnswer":{"@type":"Answer","text":"Flip the switch off and your own wallpaper comes back. If you use several Spaces, each one gets its wallpaper back the next time you visit it while Notched is running."}},
-{"@type":"Question","name":"Does it work with dynamic wallpapers?","acceptedAnswer":{"@type":"Answer","text":"Yes. Time-of-day and light or dark wallpapers keep all their frames and their schedule, so they keep changing. The first pass takes a few seconds."}},
-{"@type":"Question","name":"What about Aerials and colour wallpapers?","acceptedAnswer":{"@type":"Answer","text":"Those are drawn live by macOS, so Notched leaves them as they are. Pick a photo or a dynamic wallpaper to hide the notch."}},
-{"@type":"Question","name":"Can it shuffle my wallpapers?","acceptedAnswer":{"@type":"Answer","text":"macOS can't shuffle under the black bar, so Notched does it for you: pick a folder and an interval. If you already had a shuffle folder set, Notched takes it over."}},
-{"@type":"Question","name":"Does Notched connect to the internet?","acceptedAnswer":{"@type":"Answer","text":"Only to check for updates, once a day. No analytics and no account."}}
-]}
-</script>
-<link rel="stylesheet" href="/style.css">
-<script src="/demo.js" defer></script>
+<link rel="stylesheet" href="/css/site.css?v=25af005d">
+<link rel="modulepreload" href="/js/lib/motion.js">
+<link rel="modulepreload" href="/js/lib/store.js">
+<link rel="modulepreload" href="/js/lib/settings.js">
+<link rel="modulepreload" href="/js/lib/bandtext.js">
+<link rel="modulepreload" href="/js/lib/split.js">
+<link rel="modulepreload" href="/js/lib/roll.js">
+<link rel="modulepreload" href="/js/lib/clock.js">
+<link rel="modulepreload" href="/js/lib/visible.js">
+<link rel="modulepreload" href="/js/lib/toast.js">
+<link rel="modulepreload" href="/js/lib/ghost.js">
+<link rel="modulepreload" href="/js/lib/version.js">
+<link rel="modulepreload" href="/js/lib/cta.js">
+<link rel="modulepreload" href="/js/lib/nav.js">
+<link rel="modulepreload" href="/js/lib/trap.js">
+<link rel="modulepreload" href="/js/hero.js">
+<link rel="modulepreload" href="/js/lib/component.js">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Notched","operatingSystem":"macOS 14 or later","applicationCategory":"UtilitiesApplication","softwareVersion":"1.0.2","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"license":"https://opensource.org/licenses/MIT","downloadUrl":"https://notched.vercel.app/download","image":"https://notched.vercel.app/assets/icon-512.png","url":"https://notched.vercel.app/","codeRepository":"https://github.com/FreemanGT/notched","author":{"@type":"Person","name":"Yiftach Freeman"},"description":"Free, open-source macOS menu bar app that hides the MacBook notch by turning the menu bar black. Works with dynamic wallpapers, multiple displays and Spaces."}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How does Notched work?","acceptedAnswer":{"@type":"Answer","text":"Notched saves a copy of your wallpaper with a black strip the height of the menu bar and sets the copy as your desktop picture. The menu bar turns black and the notch blends into it. Your original file is never touched."}},{"@type":"Question","name":"How do I turn it off?","acceptedAnswer":{"@type":"Answer","text":"Flip the switch off and your own wallpaper comes back. If you use several Spaces, each one gets its wallpaper back the next time you visit it while Notched is running."}},{"@type":"Question","name":"I hid the menu bar icon. How do I get it back?","acceptedAnswer":{"@type":"Answer","text":"Open Notched again from Applications or Spotlight and the icon comes back."}},{"@type":"Question","name":"Does it work with dynamic wallpapers?","acceptedAnswer":{"@type":"Answer","text":"Yes. Time-of-day and light or dark wallpapers keep all their frames and their schedule, so they keep changing. The first pass takes a few seconds."}},{"@type":"Question","name":"What about Aerials and color wallpapers?","acceptedAnswer":{"@type":"Answer","text":"Those are drawn live by macOS, so Notched leaves them as they are. Pick a photo or a dynamic wallpaper to hide the notch."}},{"@type":"Question","name":"Can it shuffle my wallpapers?","acceptedAnswer":{"@type":"Answer","text":"macOS can't shuffle under the black bar, so Notched does it for you: pick a folder and an interval. If you already had a shuffle folder set, Notched takes it over."}},{"@type":"Question","name":"Does Notched connect to the internet?","acceptedAnswer":{"@type":"Answer","text":"Only to check for updates, once a day. No analytics and no account."}},{"@type":"Question","name":"What do I need?","acceptedAnswer":{"@type":"Answer","text":"A Mac with Apple silicon running macOS 14 or later. It's built for MacBooks with a notch and works on external displays too."}},{"@type":"Question","name":"Is it really free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Free and open source under the MIT license. No account."}},{"@type":"Question","name":"Why does the download ask for my email?","acceptedAnswer":{"@type":"Answer","text":"So the maker can email you when a new version is out. You don't need it to stay current: the app checks for updates itself once a day. Your email is kept in his Google Sheet, used only for Notched updates, and never shared or sold. The app itself collects nothing."}}]}</script>
+<script defer src="/vendor/gsap.min.js"></script>
+<script defer src="/vendor/ScrollTrigger.min.js"></script>
+<script defer src="/vendor/SplitText.min.js"></script>
+<script defer src="/vendor/CustomEase.min.js"></script>
+<script defer src="/vendor/ScrambleTextPlugin.min.js"></script>
+<script type="module" src="/js/main.js"></script>
 </head>
 <body>
-<svg width="0" height="0" class="sprite" aria-hidden="true">
-  <symbol id="i-download" viewBox="0 0 256 256"><path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.320-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z"/></symbol>
-  <symbol id="i-battery" viewBox="0 0 256 256"><path d="M200,56H32A24,24,0,0,0,8,80v96a24,24,0,0,0,24,24H200a24,24,0,0,0,24-24V80A24,24,0,0,0,200,56Zm8,120a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H200a8,8,0,0,1,8,8ZM144,96v64a8,8,0,0,1-16,0V96a8,8,0,0,1,16,0Zm-40,0v64a8,8,0,0,1-16,0V96a8,8,0,0,1,16,0ZM64,96v64a8,8,0,0,1-16,0V96a8,8,0,0,1,16,0Zm192,0v64a8,8,0,0,1-16,0V96a8,8,0,0,1,16,0Z"/></symbol>
-  <symbol id="i-wifi" viewBox="0 0 256 256"><path d="M140,204a12,12,0,1,1-12-12A12,12,0,0,1,140,204ZM237.08,87A172,172,0,0,0,18.92,87,8,8,0,0,0,29.08,99.37a156,156,0,0,1,197.840,0A8,8,0,0,0,237.08,87ZM205,122.77a124,124,0,0,0-153.94,0A8,8,0,0,0,61,135.31a108,108,0,0,1,134.06,0,8,8,0,0,0,11.24-1.3A8,8,0,0,0,205,122.77Zm-32.26,35.76a76.05,76.05,0,0,0-89.42,0,8,8,0,0,0,9.42,12.94,60,60,0,0,1,70.58,0,8,8,0,1,0,9.42-12.94Z"/></symbol>
-  <symbol id="i-search" viewBox="0 0 256 256"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></symbol>
-  <symbol id="i-sliders" viewBox="0 0 256 256"><path d="M40,88H73a32,32,0,0,0,62,0h81a8,8,0,0,0,0-16H135a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16Zm64-24A16,16,0,1,1,88,80,16,16,0,0,1,104,64ZM216,168H199a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16h97a32,32,0,0,0,62,0h17a8,8,0,0,0,0-16Zm-48,24a16,16,0,1,1,16-16A16,16,0,0,1,168,192Z"/></symbol>
-  <symbol id="i-sun" viewBox="0 0 256 256"><path d="M240,152H199.55a73.54,73.54,0,0,0,.45-8,72,72,0,0,0-144,0,73.54,73.54,0,0,0,.45,8H16a8,8,0,0,0,0,16H240a8,8,0,0,0,0-16ZM72,144a56,56,0,1,1,111.41,8H72.59A56.13,56.13,0,0,1,72,144Zm144,56a8,8,0,0,1-8,8H48a8,8,0,0,1,0-16H208A8,8,0,0,1,216,200ZM72.84,43.58a8,8,0,0,1,14.32-7.16l8,16a8,8,0,0,1-14.32,7.16Zm-56,48.84a8,8,0,0,1,10.74-3.57l16,8a8,8,0,0,1-7.16,14.31l-16-8A8,8,0,0,1,16.84,92.42Zm192,15.16a8,8,0,0,1,3.58-10.73l16-8a8,8,0,1,1,7.16,14.31l-16,8a8,8,0,0,1-10.74-3.58Zm-48-55.16,8-16a8,8,0,0,1,14.32,7.16l-8,16a8,8,0,1,1-14.32-7.16Z"/></symbol>
-  <symbol id="i-monitor" viewBox="0 0 256 256"><path d="M208,40H48A24,24,0,0,0,24,64V176a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V64A24,24,0,0,0,208,40Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V64a8,8,0,0,1,8-8H208a8,8,0,0,1,8,8Zm-48,48a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,224Z"/></symbol>
-  <symbol id="i-corners" viewBox="0 0 256 256"><path d="M200,80v32a8,8,0,0,1-16,0V88H160a8,8,0,0,1,0-16h32A8,8,0,0,1,200,80ZM96,168H72V144a8,8,0,0,0-16,0v32a8,8,0,0,0,8,8H96a8,8,0,0,0,0-16ZM232,56V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM216,200V56H40V200H216Z"/></symbol>
-  <symbol id="i-feather" viewBox="0 0 256 256"><path d="M221.28,34.75a64,64,0,0,0-90.49,0L60.69,104A15.9,15.9,0,0,0,56,115.31v73.38L26.34,218.34a8,8,0,0,0,11.32,11.32L67.32,200H140.7A15.92,15.92,0,0,0,152,195.32l0,0,69.23-70A64,64,0,0,0,221.28,34.75ZM142.07,46.06A48,48,0,0,1,211.79,112H155.33l34.35-34.34a8,8,0,0,0-11.32-11.32L120,124.69V67.87ZM72,115.35l32-31.67v57l-32,32ZM140.7,184H83.32l56-56h56.74Z"/></symbol>
-  <symbol id="i-caret" viewBox="0 0 256 256"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></symbol>
-  <symbol id="i-github" viewBox="0 0 256 256"><path d="M208.31,75.68A59.78,59.78,0,0,0,202.93,28,8,8,0,0,0,196,24a59.75,59.75,0,0,0-48,24H124A59.75,59.75,0,0,0,76,24a8,8,0,0,0-6.93,4,59.780,59.780,0,0,0-5.38,47.68A58.14,58.14,0,0,0,56,104v8a56.06,56.06,0,0,0,48.44,55.47A39.8,39.8,0,0,0,96,192v8H72a24,24,0,0,1-24-24A40,40,0,0,0,8,136a8,8,0,0,0,0,16,24,24,0,0,1,24,24,40,40,0,0,0,40,40H96v16a8,8,0,0,0,16,0V192a24,24,0,0,1,48,0v40a8,8,0,0,0,16,0V192a39.8,39.8,0,0,0-8.44-24.53A56.06,56.06,0,0,0,216,112v-8A58.14,58.14,0,0,0,208.31,75.68ZM200,112a40,40,0,0,1-40,40H112a40,40,0,0,1-40-40v-8a41.74,41.74,0,0,1,6.9-22.48A8,8,0,0,0,80,73.83a43.81,43.81,0,0,1,.79-33.58,43.88,43.88,0,0,1,32.32,20.06A8,8,0,0,0,119.82,64h32.35a8,8,0,0,0,6.74-3.69,43.87,43.87,0,0,1,32.32-20.06A43.81,43.81,0,0,1,192,73.83a8.09,8.09,0,0,0,1,7.650A41.72,41.72,0,0,1,200,104Z"/></symbol>
+<a class="skip" href="#main">Skip to content</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-arrow-down" viewBox="0 0 16 16"><path d="M8 2v8M4.5 6.8 8 10.3l3.5-3.5M2.5 11v2.5h11V11"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 16 16"><path d="M8 10.5v-8M4.5 5.7 8 2.2l3.5 3.5M2.5 11v2.5h11V11"/></symbol>
+    <symbol id="i-github" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></symbol>
+    <symbol id="i-notched" viewBox="0 0 16 11"><rect x=".75" y=".75" width="14.5" height="9.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><path class="fill" d="M.75 2.75a2 2 0 0 1 2-2h10.5a2 2 0 0 1 2 2V4H.75Z" fill="currentColor"/></symbol>
+  </defs>
 </svg>
 
-<main>
-  <header class="hero wrap">
-    <img class="app-icon" src="/assets/icon-256.png" width="120" height="120" alt="">
-    <h1>Notched</h1>
-    <p class="lede">Turns your menu bar black, so the MacBook notch disappears into the bezel.</p>
-    <a class="cta" href="/download"><svg class="i"><use href="#i-download"/></svg>Download for Mac</a>
+<header class="nav" id="nav">
+  <div class="nav__glass" aria-hidden="true"></div>
+  <div class="nav__row">
+    <div class="nav__l">
+      <a class="nav__app" href="#top" data-nav-app>Notched</a>
+      <nav class="nav__menus" aria-label="Sections">
+        <a href="#how" data-fake="File">How it works</a>
+        <a href="#features" data-fake="Edit">Features</a>
+        <a href="#try" data-fake="View">Try it</a>
+        <a href="#faq" data-fake="Window">FAQ</a>
+        <a href="https://github.com/FreemanGT/notched" target="_blank" rel="noopener" data-fake="Help">GitHub ↗</a>
+      </nav>
+    </div>
+    <div class="nav__r">
+      <a class="cta cta--nav" href="/download" data-cta="mac"><svg class="cta__arrow" aria-hidden="true"><use href="#i-arrow-down"/></svg><span class="cta__label">Download</span></a>
+      <button class="nav__glyph nav__time" type="button" aria-label="Change time of day" data-time-cycle>
+        <svg class="sun" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3 3l1.1 1.1M11.9 11.9 13 13M3 13l1.1-1.1M11.9 4.1 13 3"/></svg>
+        <svg class="moon" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 10.2A5.8 5.8 0 0 1 5.8 2.5a5.8 5.8 0 1 0 7.7 7.7Z"/></svg>
+      </button>
+      <button class="nav__glyph nav__icon" type="button" aria-label="Go to the Notched settings demo" data-nav-icon>
+        <svg viewBox="0 0 16 11" aria-hidden="true"><use href="#i-notched"/></svg>
+      </button>
+      <span class="nav__clock" data-clock aria-hidden="true"></span>
+      <button class="nav__menu-btn" type="button" aria-haspopup="dialog" aria-controls="msheet" data-menu-open>Menu</button>
+    </div>
+  </div>
+  <div class="nav__notch" data-nav-notch aria-hidden="true">
+    <svg viewBox="0 0 191 32" preserveAspectRatio="none">
+      <path d="M0 0H191Q188 0 188 3V23A9 9 0 0 1 179 32H12A9 9 0 0 1 3 23V3Q3 0 0 0Z" fill="#000"/>
+      <path class="rim" d="M188 3V23A9 9 0 0 1 179 32H12A9 9 0 0 1 3 23V3"/>
+      <g class="lens"><circle cx="95.5" cy="15" r="3.5" fill="#0B0F1A" stroke="#24304A" stroke-width="1.5"/><circle cx="94.6" cy="14.1" r=".75" fill="#7C8BB0"/></g>
+    </svg>
+    <span class="nav__tip">Camera's fine. Carry on.</span>
+  </div>
+  <i class="nav__fillet nav__fillet--l" aria-hidden="true"></i>
+  <i class="nav__fillet nav__fillet--r" aria-hidden="true"></i>
+</header>
 
-    <figure class="demo" data-demo data-on="false">
-      <button class="switch" type="button" role="switch" aria-checked="false" aria-label="Hide the notch"><span class="knob"></span></button>
-      <div class="laptop" aria-hidden="true">
-        <div class="bezel">
-          <div class="screen">
-            <div class="menubar">
-              <div class="menus"><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Window</span><span>Help</span></div>
-              <div class="status">
-                <svg class="i"><use href="#i-battery"/></svg>
-                <svg class="i"><use href="#i-wifi"/></svg>
-                <svg class="i"><use href="#i-search"/></svg>
-                <svg class="i"><use href="#i-sliders"/></svg>
-                <span>Mon 9:41</span>
-              </div>
-            </div>
-            <i class="fillet left"></i><i class="fillet right"></i>
-            <div class="notch"><i class="camera"></i></div>
+<dialog class="msheet" id="msheet" aria-label="Menu">
+  <div class="msheet__bar"><span>Notched</span><button type="button" data-menu-close>Close</button></div>
+  <nav>
+    <a href="#how" style="--i:0">How it works</a>
+    <a href="#features" style="--i:1">Features</a>
+    <a href="#try" style="--i:2">Try it</a>
+    <a href="#faq" style="--i:3">FAQ</a>
+    <a href="https://github.com/FreemanGT/notched" target="_blank" rel="noopener" style="--i:4">GitHub ↗</a>
+  </nav>
+  <a class="cta cta--lg" href="/download" data-cta="mac" style="--i:5"><svg class="cta__arrow" aria-hidden="true"><use href="#i-arrow-down"/></svg><span class="cta__label">Download for Mac</span></a>
+</dialog>
+
+<div class="bezel" aria-hidden="true"><i class="bezel__l"></i><i class="bezel__r"></i><i class="bezel__cl"></i><i class="bezel__cr"></i></div>
+
+<main id="main" tabindex="-1">
+<span id="top"></span>
+<section id="hero" class="s s--hero" data-section="hero" aria-labelledby="hero-h1">
+  <div class="hero__stage">
+    <div class="hero__wall">
+      <div class="hero__sky" aria-hidden="true"></div>
+      <div class="hero__screen" data-hero-screen></div>
+      <div class="hero__bloom" aria-hidden="true"></div>
+      <div class="hero__ridges" aria-hidden="true"><svg class="hero__ridge" viewBox="0 0 1024 1024" preserveAspectRatio="none"><path class="f" d="M0 560C200 500 380 520 560 560S880 610 1024 540V1024H0Z"/><path class="r" d="M0 560C200 500 380 520 560 560S880 610 1024 540"/></svg><svg class="hero__ridge" viewBox="0 0 1024 1024" preserveAspectRatio="none"><path class="f" d="M0 610C160 560 330 575 500 615S820 660 1024 590V1024H0Z"/><path class="r" d="M0 610C160 560 330 575 500 615S820 660 1024 590"/></svg><svg class="hero__ridge" viewBox="0 0 1024 1024" preserveAspectRatio="none"><path class="f" d="M0 700C200 610 380 640 560 700S880 790 1024 690V1024H0Z"/><path class="r" d="M0 700C200 610 380 640 560 700S880 790 1024 690"/></svg><svg class="hero__ridge" viewBox="0 0 1024 1024" preserveAspectRatio="none"><path class="f" d="M0 780C230 720 450 750 640 800S910 850 1024 770V1024H0Z"/><path class="r" d="M0 780C230 720 450 750 640 800S910 850 1024 770"/></svg><svg class="hero__ridge" viewBox="0 0 1024 1024" preserveAspectRatio="none"><path class="f" d="M0 860C240 790 470 820 660 870S920 920 1024 850V1024H0Z"/><path class="r" d="M0 860C240 790 470 820 660 870S920 920 1024 850"/></svg></div>
+      <div class="hero__dim" aria-hidden="true"></div>
+      <div class="hero__fade" aria-hidden="true"></div>
+    </div>
+    <div class="hero__spill" aria-hidden="true"></div>
+
+    <div class="hero__hint" aria-hidden="true">
+      <svg class="hero__arrow" viewBox="0 0 120 70" fill="none"><path pathLength="1" d="M112 62C92 64 70 58 58 44 47 31 46 16 34 9 26 4 16 5 8 9"/><path pathLength="1" d="M17 3 7 9.5l9 6"/></svg>
+      <span class="hero__hint-t mono"><span class="hero__hint-d">grab the notch and pull ↓</span><span class="hero__hint-m">pull the notch ↓</span></span>
+    </div>
+
+    <div class="hero__content">
+      <p class="hero__chips mono">Free · Open source · macOS 14+ · Apple silicon · <span data-version>v1.0.2</span></p>
+      <button class="hero__toggle mono" type="button" data-hero-toggle>Show the notch</button>
+      <h1 class="hero__h1 t-hero" id="hero-h1">
+        <span class="sr-only">Black out the notch.</span>
+        <span class="hero__l" aria-hidden="true"><span class="hero__li">Black out</span></span>
+        <span class="hero__l" aria-hidden="true"><span class="hero__li">the <span class="hero__w"><span class="hero__word" data-swallow>notch</span><i class="hero__pod"></i></span><span class="hero__dot">.</span></span></span>
+      </h1>
+      <p class="hero__cap mono">Gone. Well, it's still there. You just can't see it.</p>
+      <p class="hero__lede">Notched paints a black strip the height of your menu bar into a copy of your wallpaper. The bar goes black, the text goes white, and the notch disappears into the bezel.</p>
+      <div class="hero__actions">
+        <a class="cta" href="/download" data-cta="mac"><svg class="cta__arrow" aria-hidden="true"><use href="#i-arrow-down"/></svg><span class="cta__label">Download for Mac</span></a>
+        <a class="pill-ghost" href="#try">Try the switch</a>
+      </div>
+      <p class="hero__note mono">Free. No account. Notarized by Apple.</p>
+    </div>
+
+    <dl class="hero__plate mono" aria-hidden="true">
+      <div><dt>Band</dt><dd data-plate="band">000%</dd></div>
+      <div><dt>Corners</dt><dd data-plate="corners">14 PT · DUSK</dd></div>
+      <div><dt>Local</dt><dd data-plate="clock">TUE 14:32</dd></div>
+    </dl>
+  </div>
+</section>
+<section id="gone" class="s s--gone" data-section="gone" aria-labelledby="gone-title">
+  <div class="gone__stage">
+    <svg class="gone__land" viewBox="0 560 1024 464" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 620C220 560 420 590 620 640S900 700 1024 610V1024H0Z" fill-opacity=".14" transform="scale(-1 1) translate(-1024 0)"/>
+      <path d="M0 700C200 610 380 640 560 700S880 790 1024 690V1024H0Z" fill-opacity=".26"/>
+      <path d="M0 840C240 760 470 800 660 850S920 900 1024 830V1024H0Z" fill-opacity=".2"/>
+    </svg>
+    <svg class="gone__housing" viewBox="0 0 400 80" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0H400C386 0 382 6 382 20V48C382 66 372 78 352 78H48C28 78 18 66 18 48V20C18 6 14 0 0 0Z"/></svg>
+    <div class="gone__leak" aria-hidden="true"></div>
+    <i class="gone__beam" aria-hidden="true"></i>
+    <div class="wrap grid">
+      <div class="gone__col">
+        <span class="eyebrow gone__eyebrow">Quietly, on purpose</span>
+        <div class="gone__copy t-manifesto">
+          <h2 id="gone-title" class="gone__p">The notch is fine. It’s just always there.</h2>
+          <p class="gone__p">Right in the middle of your menu bar. In every app. All day.</p>
+          <p class="gone__p">Notched can’t remove it. It paints the bar around it black, and <span class="gone__pill">black</span> is what the notch was all along.</p>
+          <p class="gone__p"><a class="gone__link" href="#try">Flip one switch.</a> Then forget it’s installed.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="try" class="s s--try s--pad" data-section="try" aria-labelledby="try-h">
+  <div class="try__pin">
+    <div class="wrap try__frame">
+      <header class="try__head">
+        <span class="eyebrow">The real thing, more or less</span>
+        <h2 class="t-h2" id="try-h">Go on. Flip it.</h2>
+        <p class="try__sub t-lede">This is Notched's menu bar window, rebuilt for the browser. Flip the switch, change the corners, hide the icon: this page follows along. Nothing here touches your Mac.</p>
+      </header>
+
+      <div class="try__stage" data-try-stage>
+        <div class="try__mirror" data-try-box><div class="try__screen" data-try-mirror></div></div>
+        <p class="try__note mono">(No external display here. On your Mac, each one gets its own band.)</p>
+        <div class="try__right" data-try-right>
+          <i class="try__wire" aria-hidden="true"></i>
+          <div class="try__popwrap" data-try-popwrap>
+            <div class="try__pop" data-try-pop></div>
           </div>
         </div>
       </div>
-    </figure>
-  </header>
 
-  <section class="features wrap" aria-labelledby="features-title">
-    <h2 id="features-title">Every wallpaper, every screen</h2>
-    <div class="grid">
-      <article class="cell wide reveal">
-        <div class="mini dynamic" aria-hidden="true"><i class="band"></i><i class="notch"></i></div>
-        <div class="copy">
-          <h3><svg class="i"><use href="#i-sun"/></svg>Dynamic wallpapers keep moving</h3>
-          <p>Time-of-day and light or dark wallpapers keep every frame, so they still change through the day. Only the menu bar stays black.</p>
+      <div class="try__foot">
+        <p class="try__plate mono" aria-hidden="true"><span data-try-plate>BAND OFF · CORNERS MEDIUM 14 PT · DISPLAYS ALL</span></p>
+        <div class="try__look mono" role="radiogroup" aria-label="Window appearance" data-try-look>
+          <button type="button" role="radio" aria-checked="true" data-look="dark">Dark</button><span aria-hidden="true">|</span><button type="button" role="radio" aria-checked="false" data-look="light">Light</button>
         </div>
-      </article>
-
-      <article class="cell reveal">
-        <div class="pair" aria-hidden="true">
-          <div class="mini"><i class="band"></i><i class="notch"></i></div>
-          <div class="mini external"><i class="band"></i></div>
-        </div>
-        <h3><svg class="i"><use href="#i-monitor"/></svg>Every display and Space</h3>
-        <p>Each screen gets its own copy at its own resolution. Or keep it to the built-in display.</p>
-      </article>
-
-      <article class="cell reveal" data-corners style="--r: 14px">
-        <div class="mini corners" aria-hidden="true"><i class="band"></i><i class="notch"></i><i class="fillet left"></i><i class="fillet right"></i></div>
-        <div class="segmented" role="group" aria-label="Corner size">
-          <button type="button" data-radius="8px" aria-pressed="false">Small</button>
-          <button type="button" data-radius="14px" aria-pressed="true">Medium</button>
-          <button type="button" data-radius="22px" aria-pressed="false">Large</button>
-        </div>
-        <h3><svg class="i"><use href="#i-corners"/></svg>Rounded corners, your size</h3>
-        <p>Optional corners under the menu bar make the screen read as one clean shape.</p>
-      </article>
-
-      <article class="cell wide reveal popover">
-        <div class="copy">
-          <h3><svg class="i"><use href="#i-feather"/></svg>Quiet in the menu bar</h3>
-          <p>Change your wallpaper as often as you like. Notched notices within two seconds and redoes the bar. Prefer shuffle? It rotates a folder for you.</p>
-        </div>
-        <picture>
-          <source srcset="/assets/popover-dark.png" media="(prefers-color-scheme: dark)">
-          <img src="/assets/popover-light.png" width="340" height="595" loading="lazy" alt="The Notched popover: the switch, a preview of your screen, and options for dynamic wallpapers, rounded corners, displays and rotation.">
-        </picture>
-      </article>
+      </div>
     </div>
-  </section>
+  </div>
+</section>
+<section id="features" class="s s--features s--pad" data-section="features" aria-labelledby="features-h">
+  <div class="wrap">
+    <header class="feat__head">
+      <span class="eyebrow">What it handles</span>
+      <h2 id="features-h" class="t-h2">Set it once. It keeps up.</h2>
+    </header>
 
-  <section class="download wrap reveal" id="download" aria-labelledby="download-title">
-    <img class="app-icon" src="/assets/icon-256.png" width="76" height="76" alt="">
-    <h2 id="download-title">Free for every MacBook with a notch</h2>
-    <a class="cta" href="/download"><svg class="i"><use href="#i-download"/></svg>Download for Mac</a>
-    <p class="fine">macOS 14 or later, Apple silicon. Signed and notarized by Apple, and <a href="https://github.com/FreemanGT/notched">open source on GitHub</a>.</p>
-  </section>
+    <nav class="feat__chips" aria-label="Features">
+      <a class="mono" href="#feat-1">01 Dynamic</a><a class="mono" href="#feat-2">02 Displays</a><a class="mono" href="#feat-3">03 Corners</a><a class="mono" href="#feat-4">04 Rotation</a><a class="mono" href="#feat-5">05 Watching</a><a class="mono" href="#feat-6">06 Off</a>
+    </nav>
 
-  <section class="faq wrap" aria-labelledby="faq-title">
-    <h2 id="faq-title">Questions</h2>
-    <details>
-      <summary>How does it work?<svg class="i"><use href="#i-caret"/></svg></summary>
-      <p>Notched saves a copy of your wallpaper with a black strip the height of the menu bar and sets the copy as your desktop picture. The menu bar turns black and the notch blends into it. Your original file is never touched.</p>
-    </details>
-    <details>
-      <summary>How do I turn it off?<svg class="i"><use href="#i-caret"/></svg></summary>
-      <p>Flip the switch off and your own wallpaper comes back. If you use several Spaces, each one gets its wallpaper back the next time you visit it while Notched is running.</p>
-    </details>
-    <details>
-      <summary>Does it work with dynamic wallpapers?<svg class="i"><use href="#i-caret"/></svg></summary>
-      <p>Yes. Time-of-day and light or dark wallpapers keep all their frames and their schedule, so they keep changing. The first pass takes a few seconds.</p>
-    </details>
-    <details>
-      <summary>What about Aerials and colour wallpapers?<svg class="i"><use href="#i-caret"/></svg></summary>
-      <p>Those are drawn live by macOS, so Notched leaves them as they are. Pick a photo or a dynamic wallpaper to hide the notch.</p>
-    </details>
-    <details>
-      <summary>Can it shuffle my wallpapers?<svg class="i"><use href="#i-caret"/></svg></summary>
-      <p>macOS can't shuffle under the black bar, so Notched does it for you: pick a folder and an interval. If you already had a shuffle folder set, Notched takes it over.</p>
-    </details>
-    <details>
-      <summary>Does Notched connect to the internet?<svg class="i"><use href="#i-caret"/></svg></summary>
-      <p>Only to check for updates, once a day. No analytics and no account.</p>
-    </details>
-  </section>
+    <div class="feat__grid">
+      <div class="feat__col" aria-hidden="false">
+        <div class="feat__stage">
+          <nav class="feat__rail" aria-label="Feature chapters">
+            <button type="button" class="mono" data-go="0"><i></i>01 Dynamic</button>
+            <button type="button" class="mono" data-go="1"><i></i>02 Displays</button>
+            <button type="button" class="mono" data-go="2"><i></i>03 Corners</button>
+            <button type="button" class="mono" data-go="3"><i></i>04 Rotation</button>
+            <button type="button" class="mono" data-go="4"><i></i>05 Watching</button>
+            <button type="button" class="mono" data-go="5"><i></i>06 Off</button>
+          </nav>
+          <div class="feat__view">
+            <div class="feat__spill" aria-hidden="true"></div>
+            <div class="feat__tilt"><div class="feat__cam"><div class="feat__screen"></div></div></div>
+            <div class="feat__chip mono" aria-hidden="true"><i></i>Built-in display only</div>
+            <p class="feat__readout mono" aria-hidden="true"></p>
+          </div>
+        </div>
+      </div>
+      <div class="feat__chapters">
+        <article class="chapter" id="feat-1" data-ch="0" aria-labelledby="feat-1-h">
+          <span class="chapter__num mono">01</span>
+          <p class="chapter__fig t-figure"><span class="chapter__in"><span class="fig__v">06:00</span></span></p>
+          <h3 id="feat-1-h" class="t-h3" tabindex="-1">Dynamic wallpapers keep moving.</h3>
+          <p class="chapter__body">Time-of-day and light/dark wallpapers keep every frame and their own schedule, so your desktop still shifts with the hour, or with dark mode, under a black bar. The first pass takes a few seconds.</p>
+          <div class="chapter__screen"></div>
+          <div class="chapter__toy">
+            <label class="toy-arc">
+              <svg class="toy-arc__svg" viewBox="0 0 300 64" preserveAspectRatio="none" aria-hidden="true"><path d="M6 60 Q150 -40 294 60"/></svg>
+              <i class="toy-arc__sun" aria-hidden="true"></i>
+              <input type="range" min="0" max="950" step="1" value="0" aria-label="Time of day" aria-valuetext="Dawn">
+            </label>
+          </div>
+        </article>
 
-  <aside class="also wrap reveal" aria-labelledby="also-title">
-    <img src="/assets/claude-meter.png" width="64" height="64" alt="">
-    <div>
-      <h2 id="also-title">Also by Yiftach Freeman</h2>
-      <p>Claude Meter puts your Claude usage limits right in the MacBook notch.</p>
+        <article class="chapter" id="feat-2" data-ch="1" aria-labelledby="feat-2-h">
+          <span class="chapter__num mono">02</span>
+          <p class="chapter__fig t-figure"><span class="chapter__in"><span class="fig__v">All</span></span></p>
+          <h3 id="feat-2-h" class="t-h3" tabindex="-1">Every display. Every Space.</h3>
+          <p class="chapter__body">Each screen gets its own copy at its own resolution. Other Spaces are fixed up when you visit them. Prefer just the laptop? Tick Built-in display only.</p>
+          <div class="chapter__screen"></div>
+          <div class="chapter__toy">
+            <label class="toy-check mono"><input type="checkbox"><span>Built-in display only</span></label>
+          </div>
+        </article>
+
+        <article class="chapter" id="feat-3" data-ch="2" aria-labelledby="feat-3-h">
+          <span class="chapter__num mono">03</span>
+          <p class="chapter__fig t-figure"><span class="chapter__in"><span class="fig__v">14</span><span class="fig__u">PT</span></span></p>
+          <h3 id="feat-3-h" class="t-h3" tabindex="-1">Rounded corners, if you like.</h3>
+          <p class="chapter__body">Concave curves under each end of the band, so the desktop reads like a rounded screen. Small, Medium or Large: 10, 14 or 20 points. On by default, at Medium.</p>
+          <div class="chapter__screen"></div>
+          <div class="chapter__toy">
+            <div class="toy-radius mono" role="radiogroup" aria-label="Corner radius">
+              <button type="button" role="radio" aria-checked="false" data-r="10" tabindex="-1" aria-label="Small, 10 points">10</button><span aria-hidden="true">·</span><button type="button" role="radio" aria-checked="true" data-r="14" aria-label="Medium, 14 points">14</button><span aria-hidden="true">·</span><button type="button" role="radio" aria-checked="false" data-r="20" tabindex="-1" aria-label="Large, 20 points">20</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="chapter" id="feat-4" data-ch="3" aria-labelledby="feat-4-h">
+          <span class="chapter__num mono">04</span>
+          <p class="chapter__fig t-figure"><span class="chapter__in"><span class="fig__v">Hourly</span></span></p>
+          <h3 id="feat-4-h" class="t-h3" tabindex="-1">It shuffles for you.</h3>
+          <p class="chapter__body">macOS can't shuffle wallpapers under a black bar, so Notched rotates a folder itself: every 5 minutes, 15, 30, hourly or daily, or right now with Next. A shuffle folder you already set in System Settings is taken over automatically.</p>
+          <div class="chapter__screen"></div>
+          <div class="chapter__toy"><button type="button" class="toy-pill" data-toy="next">Next</button></div>
+        </article>
+
+        <article class="chapter" id="feat-5" data-ch="4" aria-labelledby="feat-5-h">
+          <span class="chapter__num mono">05</span>
+          <p class="chapter__fig t-figure"><span class="chapter__in"><span class="fig__v">2</span><span class="fig__u">S</span></span></p>
+          <h3 id="feat-5-h" class="t-h3" tabindex="-1">Change it. Wait two seconds.</h3>
+          <p class="chapter__body">Notched checks your wallpaper every two seconds. Pick a new picture and the bar is redone within about two seconds. Nothing to click.</p>
+          <div class="chapter__screen"></div>
+          <div class="chapter__toy"><button type="button" class="toy-pill toy-pill--ghost" data-toy="change">Change wallpaper</button></div>
+        </article>
+
+        <article class="chapter" id="feat-6" data-ch="5" aria-labelledby="feat-6-h">
+          <span class="chapter__num mono">06</span>
+          <p class="chapter__fig t-figure"><span class="chapter__in"><span class="fig__v">Off.</span></span></p>
+          <h3 id="feat-6-h" class="t-h3" tabindex="-1">Off means off.</h3>
+          <p class="chapter__body">Switch Notched off and your own wallpaper comes back. Other Spaces get theirs back the next time you visit them while Notched is running. Your original files are never edited.</p>
+          <div class="chapter__screen"></div>
+          <div class="chapter__toy"><button type="button" class="toy-text mono" data-toy="on">Switch it back on</button></div>
+          <p class="chapter__small">Aerial, color and other live wallpapers are drawn by macOS, so Notched leaves them alone. Placement (fill, fit, stretch or center) stays exactly as you set it.</p>
+        </article>
+      </div>
+
     </div>
-    <a class="ghost" href="https://claudemeter.vercel.app/?ref=notched">Visit Claude Meter</a>
-  </aside>
+  </div>
+</section>
+<section id="how" class="s s--how" data-section="how" aria-labelledby="how-title">
+  <div class="how__stage">
+    <div class="wrap grid how__grid">
+      <div class="how__copy">
+        <span class="eyebrow how__eyebrow">How it works</span>
+        <h2 id="how-title" class="t-h2 how__title">It's just a picture.</h2>
+        <ol class="how__steps">
+          <li class="how__step"><span class="how__n">01</span><p class="t-lede">Notched makes a copy of your wallpaper. The original file is never touched.</p></li>
+          <li class="how__step"><span class="how__n">02</span><p class="t-lede">It bakes a black strip, exactly the height of your menu bar, into the top of the copy.</p></li>
+          <li class="how__step"><span class="how__n">03</span><p class="t-lede">It sets the copy as your desktop picture, at each screen's own resolution, placed the way you had it: fill, fit, stretch or center.</p></li>
+          <li class="how__step"><span class="how__n">04</span><p class="t-lede">The menu bar goes black, its text goes white, and the notch has nothing left to stand out against.</p></li>
+        </ol>
+        <p class="how__foot">Signed with Developer ID and notarized by Apple. Updates are signed and verified, and never pop a window at you: the menu bar icon just grows a small arrow.</p>
+      </div>
+
+      <div class="how__view">
+        <div class="how__scene">
+          <div class="how__rig">
+            <i class="how__glow" aria-hidden="true"></i>
+            <button type="button" class="how__plane how__plane--orig" style="--i:0" aria-label="Layer 1: your original wallpaper. Never modified.">
+              <span class="how__face"><span class="how__wp" data-wp></span><i class="how__dot" aria-hidden="true"></i></span>
+            </button>
+            <button type="button" class="how__plane how__plane--copy" style="--i:1" aria-label="Layer 2: the copy, saved in Library, Application Support, Notched.">
+              <span class="how__face"><span class="how__wp" data-wp></span><i class="how__spill" aria-hidden="true"></i><i class="how__dot" aria-hidden="true"></i></span>
+            </button>
+            <button type="button" class="how__plane how__plane--strip" style="--i:2" aria-label="Layer 3: the black strip, exactly the height of the menu bar, with rounded corners.">
+              <span class="how__face"><i class="how__spill" aria-hidden="true"></i><span class="how__slab" aria-hidden="true"><i class="how__band"></i><i class="how__fil how__fil--l"></i><i class="how__fil how__fil--r"></i></span><i class="how__dot" aria-hidden="true"></i></span>
+            </button>
+            <button type="button" class="how__plane how__plane--desk" style="--i:3" aria-label="Layer 4: the finished copy, set as your desktop picture. The menu bar is black and the notch disappears.">
+              <span class="how__face"><span class="how__wp" data-wp></span><i class="how__spill" aria-hidden="true"></i>
+                <span class="how__slab" aria-hidden="true"><i class="how__band"></i><i class="how__fil how__fil--l"></i><i class="how__fil how__fil--r"></i></span>
+                <span class="how__menu" aria-hidden="true"><span><b>Notched</b> File Edit View Window</span><span>Tue 14:32</span></span>
+                <i class="how__notch" aria-hidden="true"><i class="how__lens"></i></i><i class="how__dot" aria-hidden="true"></i></span>
+            </button>
+          </div>
+          <p class="how__stamp"><i aria-hidden="true"></i><span>NEW WALLPAPER? REDONE WITHIN ABOUT 2 S</span></p>
+        </div>
+        <svg class="how__leaders" aria-hidden="true"><line pathLength="1"/><line pathLength="1"/><line pathLength="1"/><line pathLength="1"/></svg>
+        <ul class="how__tags" aria-hidden="true">
+          <li class="how__tag" style="--i:0">ORIGINAL · NEVER MODIFIED</li>
+          <li class="how__tag" style="--i:1">COPY · ~/Library/<wbr>Application Support/<wbr>Notched</li>
+          <li class="how__tag" style="--i:2">BLACK STRIP · MENU-BAR HEIGHT</li>
+          <li class="how__tag" style="--i:3">SET AS DESKTOP PICTURE</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="privacy" class="s s--privacy paper" data-section="privacy" aria-labelledby="privacy-title">
+  <div class="pv__strip" aria-hidden="true">
+    <span class="pv__fillet pv__fillet--l"></span>
+    <span class="pv__fillet pv__fillet--r"></span>
+    <span class="pv__r mono" aria-hidden="true">R = <b class="pv__rv">20 PT · LARGE</b></span>
+  </div>
+  <div class="wrap pv__body">
+    <span class="eyebrow mono pv__eyebrow">Privacy</span>
+    <h2 id="privacy-title" class="pv__list">
+      <span class="pv__row"><span class="pv__st">No account.</span><span class="pv__meta mono" aria-hidden="true">Accounts <b>0</b></span><span class="pv__rule" aria-hidden="true"></span></span>
+      <span class="pv__row"><span class="pv__st">No analytics.</span><span class="pv__meta mono" aria-hidden="true">Trackers <b>0</b></span><span class="pv__rule" aria-hidden="true"></span></span>
+      <span class="pv__row"><span class="pv__st pv__st--long">One request a day.</span><span class="pv__meta mono" aria-hidden="true">Requests / day <b>1</b></span><span class="pv__rule" aria-hidden="true"></span></span>
+    </h2>
+    <div class="grid pv__foot">
+      <p class="t-lede pv__lede">The app makes <strong>one network request: a daily update check</strong> against notched.vercel.app. Your <strong>original wallpaper files are never modified</strong>; copies live in <span class="pv__path">~/Library/Application&nbsp;Support/Notched</span>. This website has <strong>no analytics and no tracking</strong>. It asks for one thing, an email when you download, and uses it <strong>only to tell you about Notched updates.</strong></p>
+      <a class="pv__src" href="https://github.com/FreemanGT/notched" rel="noopener">Read the source on GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+  </div>
+</section>
+<section id="faq" class="s s--faq paper s--pad" data-section="faq" aria-labelledby="faq-title">
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute"><symbol id="faq-notch" viewBox="0 0 28 14"><path d="M1 1.5H27C25.2 1.5 24.4 2.3 24.4 4V8C24.4 10.8 22.2 13 19.4 13H8.6C5.8 13 3.6 10.8 3.6 8V4C3.6 2.3 2.8 1.5 1 1.5Z"/></symbol></svg>
+  <div class="wrap grid">
+    <header class="faq__head">
+      <span class="eyebrow">FAQ</span>
+      <h2 id="faq-title" class="t-h2 faq__title">Fair questions.</h2>
+    </header>
+    <div class="faq__list">
+      <details class="faq__row" open>
+        <summary><span class="faq__q">How does Notched work?</span><span class="faq__ink" aria-hidden="true"><span>How does Notched work?</span></span><svg class="faq__mk" aria-hidden="true" viewBox="0 0 28 14"><use href="#faq-notch"/></svg></summary>
+        <div class="faq__a"><p>Notched saves a copy of your wallpaper with a black strip the height of the menu bar and sets the copy as your desktop picture. The menu bar turns black and the notch blends into it. Your original file is never touched.</p></div>
+      </details>
+      <details class="faq__row">
+        <summary><span class="faq__q">How do I turn it off?</span><span class="faq__ink" aria-hidden="true"><span>How do I turn it off?</span></span><svg class="faq__mk" aria-hidden="true" viewBox="0 0 28 14"><use href="#faq-notch"/></svg></summary>
+        <div class="faq__a"><p>Flip the switch off and your own wallpaper comes back. If you use several Spaces, each one gets its wallpaper back the next time you visit it while Notched is running.</p></div>
+      </details>
+      <details class="faq__row">
+        <summary><span class="faq__q">I hid the menu bar icon. How do I get it back?</span><span class="faq__ink" aria-hidden="true"><span>I hid the menu bar icon. How do I get it back?</span></span><svg class="faq__mk" aria-hidden="true" viewBox="0 0 28 14"><use href="#faq-notch"/></svg></summary>
+        <div class="faq__a"><p>Open Notched again from Applications or Spotlight and the icon comes back.</p></div>
+      </details>
+      <details class="faq__row">
+        <summary><span class="faq__q">Does it work with dynamic wallpapers?</span><span class="faq__ink" aria-hidden="true"><span>Does it work with dynamic wallpapers?</span></span><svg class="faq__mk" aria-hidden="true" viewBox="0 0 28 14"><use href="#faq-notch"/></svg></summary>
+        <div class="faq__a"><p>Yes. Time-of-day and light or dark wallpapers keep all their frames and their schedule, so they keep changing. The first pass takes a few seconds.</p></div>
+      </details>
+      <details class="faq__row">
+        <summary><span class="faq__q">What about Aerials and color wallpapers?</span><span class="faq__ink" aria-hidden="true"><span>What about Aerials and color wallpapers?</span></span><svg class="faq__mk" aria-hidden="true" viewBox="0 0 28 14"><use href="#faq-notch"/></svg></summary>
+        <div class="faq__a"><p>Those are drawn live by macOS, so Notched leaves them as they are. Pick a photo or a dynamic wallpaper to hide the notch.</p></div>
+      </details>
+      <details class="faq__row">
+        <summary><span class="faq__q">Can it shuffle my wallpapers?</span><span class="faq__ink" aria-hidden="true"><span>Can it shuffle my wallpapers?</span></span><svg class="faq__mk" aria-hidden="true" viewBox="0 0 28 14"><use href="#faq-notch"/></svg></summary>
+        <div class="faq__a"><p>macOS can't shuffle under the black bar, so Notched does it for you: pick a folder and an interval. If you already had a shuffle folder set, Notched takes it over.</p></div>
+      </details>
+      <details class="faq__row">
+        <summary><span class="faq__q">Does Notched connect to the internet?</span><span class="faq__ink" aria-hidden="true"><span>Does Notched connect to the internet?</span></span><svg class="faq__mk" aria-hidden="true" viewBox="0 0 28 14"><use href="#faq-notch"/></svg></summary>
+        <div class="faq__a"><p>Only to check for updates, once a day. No analytics and no account.</p></div>
+      </details>
+      <details class="faq__row">
+        <summary><span class="faq__q">What do I need?</span><span class="faq__ink" aria-hidden="true"><span>What do I need?</span></span><svg class="faq__mk" aria-hidden="true" viewBox="0 0 28 14"><use href="#faq-notch"/></svg></summary>
+        <div class="faq__a"><p>A Mac with Apple silicon running macOS 14 or later. It's built for MacBooks with a notch and works on external displays too.</p></div>
+      </details>
+      <details class="faq__row">
+        <summary><span class="faq__q">Is it really free?</span><span class="faq__ink" aria-hidden="true"><span>Is it really free?</span></span><svg class="faq__mk" aria-hidden="true" viewBox="0 0 28 14"><use href="#faq-notch"/></svg></summary>
+        <div class="faq__a"><p>Yes. Free and open source under the MIT license. No account.</p></div>
+      </details>
+      <details class="faq__row">
+        <summary><span class="faq__q">Why does the download ask for my email?</span><span class="faq__ink" aria-hidden="true"><span>Why does the download ask for my email?</span></span><svg class="faq__mk" aria-hidden="true" viewBox="0 0 28 14"><use href="#faq-notch"/></svg></summary>
+        <div class="faq__a"><p>So the maker can email you when a new version is out. You don't need it to stay current: the app checks for updates itself once a day. Your email is kept in his Google Sheet, used only for Notched updates, and never shared or sold. The app itself collects nothing.</p></div>
+      </details>
+    </div>
+  </div>
+</section>
+<section id="download" class="s s--download" data-section="download" aria-labelledby="dl-title">
+  <div class="dl__stage">
+    <div class="dl__ink" aria-hidden="true"><i class="dl__strip"></i><i class="dl__fil dl__fil--l"></i><i class="dl__fil dl__fil--r"></i></div>
+    <div class="dl__in wrap">
+      <p class="eyebrow dl__eye">Download</p>
+      <p class="dl__word"><i class="dl__notch" aria-hidden="true"><b class="dl__cam"></b></i><span class="dl__wm">Notched</span><i class="dl__egg" aria-hidden="true"></i></p>
+      <h2 id="dl-title" class="dl__h">Make it disappear.</h2>
+      <div class="dl__act">
+        <a class="cta cta--lg dl__cta" href="/download" data-cta="mac"><svg class="cta__arrow" aria-hidden="true"><use href="#i-arrow-down"/></svg><span class="cta__label">Download for Mac</span></a>
+        <p class="mono dl__meta"><svg viewBox="0 0 16 11" aria-hidden="true"><use href="#i-notched"/></svg><span class="dl__type">Free · MIT license · <span data-version>v1.0.2</span> · macOS 14+ · Apple silicon · Notarized by Apple</span></p>
+        <a class="gh-link" href="https://github.com/FreemanGT/notched" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-github"/></svg>Source on GitHub</a>
+        <a class="dl__card" href="https://claudemeter.vercel.app/?ref=notched" target="_blank" rel="noopener">
+          <img src="/assets/claude-meter.png" alt="" width="28" height="28" loading="lazy">
+          <span>Also by Yiftach Freeman: <b>Claude Meter</b> puts your Claude usage limits right in the MacBook notch.<span class="dl__arr" aria-hidden="true"> ↗</span><span class="sr-only"> (opens in a new tab)</span></span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
 </main>
 
-<footer class="foot wrap">
-  <span>© 2026 Yiftach Freeman</span>
-  <a href="https://github.com/FreemanGT/notched"><svg class="i"><use href="#i-github"/></svg>Source</a>
-  <span>Not affiliated with Apple.</span>
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot__row">
+      <span class="foot__app">Notched</span>
+      <span data-version>v1.0.2</span>
+      <a href="https://github.com/FreemanGT/notched/blob/main/LICENSE" target="_blank" rel="noopener">MIT license</a>
+      <a href="https://github.com/FreemanGT/notched" target="_blank" rel="noopener">Source on GitHub</a>
+      <a href="/llms.txt">llms.txt</a>
+    </div>
+    <div class="foot__row"><span>Not affiliated with Apple.</span><span>© 2026 Yiftach Freeman</span></div>
+  </div>
 </footer>
+
+<aside class="promo" data-promo aria-label="Also by the maker">
+  <a class="promo__a" href="https://claudemeter.vercel.app/?ref=notched" target="_blank" rel="noopener" aria-label="Claude Meter: puts your Claude usage limits right in the MacBook notch (opens in a new tab)">
+    <img src="/assets/claude-meter.png" alt="" width="20" height="20" loading="lazy">
+    <span class="promo__t" aria-hidden="true"><span class="promo__s">Claude Meter ↗</span><span class="promo__l">Your Claude limits, in the notch ↗</span></span>
+  </a>
+  <button class="promo__x" type="button" aria-label="Dismiss" data-promo-x>×</button>
+</aside>
+
+<div class="toasts" role="status" aria-live="polite" data-toasts></div>
 </body>
 </html>

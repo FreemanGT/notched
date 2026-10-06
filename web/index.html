@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Notched: hide the MacBook notch (free for Mac)</title>
+<meta name="description" content="Notched turns your menu bar black so the MacBook notch disappears into the bezel. Free and open source. Keeps dynamic wallpapers moving and works on every display. macOS 14+, Apple silicon.">
+<link rel="canonical" href="https://notched.vercel.app/">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<meta name="nt-signup" content="https://script.google.com/macros/s/AKfycbyYJTV8Mm_N77moH5FPesW6b_7Khdt2XHBn9IvVHSbHGw43RxAkXjgibvvWu-QkzNuMRA/exec">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Notched">
+<meta property="og:url" content="https://notched.vercel.app/">
+<meta property="og:title" content="Notched: hide the MacBook notch">
+<meta property="og:description" content="Turns your menu bar black so the notch disappears into the bezel. Free and open source for Mac.">
+<meta property="og:image" content="https://notched.vercel.app/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A MacBook screen-top with a black menu bar where the notch has disappeared. Black out the notch.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Notched: hide the MacBook notch">
+<meta name="twitter:description" content="Turns your menu bar black so the notch disappears into the bezel. Free and open source for Mac.">
+<meta name="twitter:image" content="https://notched.vercel.app/assets/og.png">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="preload" href="/fonts/bricolage.woff2" as="font" type="font/woff2" crossorigin>
+<script>
+/* Before first paint (SPEC §3.2, §4.3): phase from the local clock (?t= override), intro flags, stored prefs. */
+(function () {
+  var d = document.documentElement, q = new URLSearchParams(location.search), t = parseFloat(q.get("t"));
+  if (isNaN(t)) {
+    var n = new Date(), h = n.getHours() + n.getMinutes() / 60;
+    t = h >= 5 && h < 8 ? (h - 5) / 3 * .25 : h >= 8 && h < 17 ? .25 + (h - 8) / 9 * .25 : h >= 17 && h < 20 ? .5 + (h - 17) / 3 * .25 : .75 + ((h - 20 + 24) % 24) / 9 * .25;
+  }
+  t = ((t % 1) + 1) % 1;
+  d.style.setProperty("--t0", t.toFixed(4));
+  d.dataset.phase = ["dawn", "day", "dusk", "night"][Math.round(t * 4) % 4];
+  d.classList.add("js");
+  var still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (still) d.classList.add("still");
+  try {
+    var s = JSON.parse(localStorage.getItem("nt-settings") || "{}");
+    if (s.radius) d.style.setProperty("--r-site-pt", s.radius);
+    if (s.iconHidden) d.classList.add("icon-hidden");
+  } catch (e) {}
+  if (!still && !location.hash) {
+    var seen = false; try { seen = sessionStorage.getItem("nt-intro") === "1"; sessionStorage.setItem("nt-intro", "1"); } catch (e) {}
+    d.classList.add("intro", seen ? "intro--quick" : "intro--full");
+  }
+})();
+</script>
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/component.css">
+<link rel="stylesheet" href="/css/product.css">
+<!-- @section-css -->
+<!-- @modulepreload -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Notched","operatingSystem":"macOS 14 or later","applicationCategory":"UtilitiesApplication","softwareVersion":"1.0.2","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"license":"https://opensource.org/licenses/MIT","downloadUrl":"https://notched.vercel.app/download","image":"https://notched.vercel.app/assets/icon-512.png","url":"https://notched.vercel.app/","codeRepository":"https://github.com/FreemanGT/notched","author":{"@type":"Person","name":"Yiftach Freeman"},"description":"Free, open-source macOS menu bar app that hides the MacBook notch by turning the menu bar black. Works with dynamic wallpapers, multiple displays and Spaces."}</script>
+<!-- @faq-jsonld -->
+<script defer src="/vendor/gsap.min.js"></script>
+<script defer src="/vendor/ScrollTrigger.min.js"></script>
+<script defer src="/vendor/SplitText.min.js"></script>
+<script defer src="/vendor/CustomEase.min.js"></script>
+<script defer src="/vendor/ScrambleTextPlugin.min.js"></script>
+<script type="module" src="/js/main.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-arrow-down" viewBox="0 0 16 16"><path d="M8 2v8M4.5 6.8 8 10.3l3.5-3.5M2.5 11v2.5h11V11"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 16 16"><path d="M8 10.5v-8M4.5 5.7 8 2.2l3.5 3.5M2.5 11v2.5h11V11"/></symbol>
+    <symbol id="i-github" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></symbol>
+    <symbol id="i-notched" viewBox="0 0 16 11"><rect x=".75" y=".75" width="14.5" height="9.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><path class="fill" d="M.75 2.75a2 2 0 0 1 2-2h10.5a2 2 0 0 1 2 2V4H.75Z" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav" id="nav">
+  <div class="nav__glass" aria-hidden="true"></div>
+  <div class="nav__row">
+    <div class="nav__l">
+      <a class="nav__app" href="#top" data-nav-app>Notched</a>
+      <nav class="nav__menus" aria-label="Sections">
+        <a href="#how" data-fake="File">How it works</a>
+        <a href="#features" data-fake="Edit">Features</a>
+        <a href="#try" data-fake="View">Try it</a>
+        <a href="#faq" data-fake="Window">FAQ</a>
+        <a href="https://github.com/FreemanGT/notched" target="_blank" rel="noopener" data-fake="Help">GitHub ↗</a>
+      </nav>
+    </div>
+    <div class="nav__r">
+      <a class="cta cta--nav" href="/download" data-cta="mac"><svg class="cta__arrow" aria-hidden="true"><use href="#i-arrow-down"/></svg><span class="cta__label">Download</span></a>
+      <button class="nav__glyph nav__time" type="button" aria-label="Change time of day" data-time-cycle>
+        <svg class="sun" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3 3l1.1 1.1M11.9 11.9 13 13M3 13l1.1-1.1M11.9 4.1 13 3"/></svg>
+        <svg class="moon" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 10.2A5.8 5.8 0 0 1 5.8 2.5a5.8 5.8 0 1 0 7.7 7.7Z"/></svg>
+      </button>
+      <button class="nav__glyph nav__icon" type="button" aria-label="Go to the Notched settings demo" data-nav-icon>
+        <svg viewBox="0 0 16 11" aria-hidden="true"><use href="#i-notched"/></svg>
+      </button>
+      <span class="nav__clock" data-clock aria-hidden="true"></span>
+      <button class="nav__menu-btn" type="button" aria-haspopup="dialog" aria-controls="msheet" data-menu-open>Menu</button>
+    </div>
+  </div>
+  <div class="nav__notch" data-nav-notch aria-hidden="true">
+    <svg viewBox="0 0 191 32" preserveAspectRatio="none">
+      <path d="M0 0H191Q188 0 188 3V23A9 9 0 0 1 179 32H12A9 9 0 0 1 3 23V3Q3 0 0 0Z" fill="#000"/>
+      <path class="rim" d="M188 3V23A9 9 0 0 1 179 32H12A9 9 0 0 1 3 23V3"/>
+      <g class="lens"><circle cx="95.5" cy="15" r="3.5" fill="#0B0F1A" stroke="#24304A" stroke-width="1.5"/><circle cx="94.6" cy="14.1" r=".75" fill="#7C8BB0"/></g>
+    </svg>
+    <span class="nav__tip">Camera's fine. Carry on.</span>
+  </div>
+  <i class="nav__fillet nav__fillet--l" aria-hidden="true"></i>
+  <i class="nav__fillet nav__fillet--r" aria-hidden="true"></i>
+</header>
+
+<dialog class="msheet" id="msheet" aria-label="Menu">
+  <div class="msheet__bar"><span>Notched</span><button type="button" data-menu-close>Close</button></div>
+  <nav>
+    <a href="#how" style="--i:0">How it works</a>
+    <a href="#features" style="--i:1">Features</a>
+    <a href="#try" style="--i:2">Try it</a>
+    <a href="#faq" style="--i:3">FAQ</a>
+    <a href="https://github.com/FreemanGT/notched" target="_blank" rel="noopener" style="--i:4">GitHub ↗</a>
+  </nav>
+  <a class="cta cta--lg" href="/download" data-cta="mac" style="--i:5"><svg class="cta__arrow" aria-hidden="true"><use href="#i-arrow-down"/></svg><span class="cta__label">Download for Mac</span></a>
+</dialog>
+
+<div class="bezel" aria-hidden="true"><i class="bezel__l"></i><i class="bezel__r"></i><i class="bezel__cl"></i><i class="bezel__cr"></i></div>
+
+<main id="main" tabindex="-1">
+<span id="top"></span>
+<!-- @section:hero -->
+<!-- @section:gone -->
+<!-- @section:try -->
+<!-- @section:features -->
+<!-- @section:how -->
+<!-- @section:privacy -->
+<!-- @section:faq -->
+<!-- @section:download -->
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot__row">
+      <span class="foot__app">Notched</span>
+      <span data-version>v%VERSION%</span>
+      <a href="https://github.com/FreemanGT/notched/blob/main/LICENSE" target="_blank" rel="noopener">MIT license</a>
+      <a href="https://github.com/FreemanGT/notched" target="_blank" rel="noopener">Source on GitHub</a>
+      <a href="/llms.txt">llms.txt</a>
+    </div>
+    <div class="foot__row"><span>Not affiliated with Apple.</span><span>© 2026 Yiftach Freeman</span></div>
+  </div>
+</footer>
+
+<aside class="promo" data-promo aria-label="Also by the maker">
+  <a class="promo__a" href="https://claudemeter.vercel.app/?ref=notched" target="_blank" rel="noopener" aria-label="Claude Meter: puts your Claude usage limits right in the MacBook notch (opens in a new tab)">
+    <img src="/assets/claude-meter.png" alt="" width="20" height="20" loading="lazy">
+    <span class="promo__t" aria-hidden="true"><span class="promo__s">Claude Meter ↗</span><span class="promo__l">Your Claude limits, in the notch ↗</span></span>
+  </a>
+  <button class="promo__x" type="button" aria-label="Dismiss" data-promo-x>×</button>
+</aside>
+
+<div class="toasts" role="status" aria-live="polite" data-toasts></div>
+</body>
+</html>
