@@ -125,7 +125,7 @@ export function paintWallpaper(el, { preset = 'hills', time = 'local' } = {}) {
     + `<svg class="nt-wp__stars" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMin slice" aria-hidden="true">${STARS}</svg>`
     + `<div class="nt-wp__sun"></div><div class="nt-wp__land">${hillsSVG(preset)}</div>`;
   const layers = [...el.querySelectorAll('.nt-wp__phase')], sun = el.querySelector('.nt-wp__sun'), stars = el.querySelector('.nt-wp__stars');
-  let land = el.querySelector('.nt-wp__land'), cur = preset, t = 0;
+  let land = el.querySelector('.nt-wp__land'), cur = preset, t = 0, hill = '';
   const setTime = v => {
     t = v === 'local' ? phaseFromClock() : v; const m = phaseMix(t);
     layers.forEach((l, i) => { l.style.opacity = i === m.i0 ? 1 : i === m.i1 ? m.w : 0; l.style.zIndex = i === m.i1 ? 1 : 0; });
@@ -135,7 +135,8 @@ export function paintWallpaper(el, { preset = 'hills', time = 'local' } = {}) {
     sun.style.opacity = m.get('stars') > .9 ? .85 : 1;
     stars.style.opacity = m.get('stars');
     const night = clamp(1 - m.get('lum') / .55); // hills tint toward the horizon at dusk/night
-    el.style.setProperty('--hill', rgb(mix([255, 255, 255], mix(hex(a.hz), hex(b.hz), m.w), night * .7)));
+    const hc = rgb(mix([255, 255, 255], mix(hex(a.hz), hex(b.hz), m.w), night * .7));
+    if (hc !== hill) { hill = hc; el.style.setProperty('--hill', hc); }   // inherited: a write restyles the whole hills SVG
     return t;
   };
   const setPreset = (id, { transition = 'cut' } = {}) => {
@@ -211,11 +212,12 @@ export function createScreen(el, opts = {}) {
       const x = buildGlass(true); x.g.classList.add('nt-glass--ext');
       const w2 = paintWallpaper(x.wp, { preset: wp.preset, time: wp.time });
       exts.push({ ...x, w: w2 });
+      el._night = undefined;   // the new menu bar needs its sun/moon glyph
       exts.length === 1 ? row.prepend(x.g) : row.append(x.g);
     }
   }
 
-  let lastMenu = '';
+  let lastMenu = '', lastAria = '';
   function render(s, changed) {
     const st = el.style, all = !changed;
     const has = k => all || (changed.has ? changed.has(k) : changed.includes(k));
@@ -229,18 +231,21 @@ export function createScreen(el, opts = {}) {
     if (has('iconHidden')) el.classList.toggle('nt-icon-hidden', !!s.iconHidden);
     if (has('corners')) el.classList.toggle('nt-nocorners', !s.corners);
     if (has('displays')) { ensureExts(s.displays); exts.forEach((x, i) => x.g.classList.toggle('is-on', i < s.displays - 1)); el.classList.toggle('nt-multi', s.displays > 1); }
-    // menu text colour
-    const lum = phaseMix(wp.time).get('lum');
-    const mt = s.menuText === 'auto' ? (lum > .45 ? 'dark' : 'white') : s.menuText;
-    if (mt !== lastMenu) { el.dataset.menu = mt; lastMenu = mt; }
-    const tg = el.querySelectorAll('.nt-mb__tg'), night = phaseName(wp.time) === 'night';
-    if (el._night !== night) { el._night = night; tg.forEach(n => (n.innerHTML = night ? MOONG : SUNG)); }
+    // menu text colour + sun/moon glyph: only the wallpaper time, the text setting or a new display change them
+    if (has('time') || has('menuText') || has('displays')) {
+      const lum = phaseMix(wp.time).get('lum');
+      const mt = s.menuText === 'auto' ? (lum > .45 ? 'dark' : 'white') : s.menuText;
+      if (mt !== lastMenu) { el.dataset.menu = mt; lastMenu = mt; }
+      const night = phaseName(wp.time) === 'night';
+      if (el._night !== night) { el._night = night; el.querySelectorAll('.nt-mb__tg').forEach(n => (n.innerHTML = night ? MOONG : SUNG)); }
+    }
     // fillets follow the band unless someone drives `fil` explicitly
     if (has('band') && !filManual) {
       const want = s.band >= .98 ? 1 : 0;
       if (want !== filTarget) { filTarget = want; tween(store, 'fil', want, want ? 520 : 160, want ? EASE.fillet : EASE.swallow, v => store.set({ fil: v })); }
     }
-    el.setAttribute('aria-label', `${label}: menu bar ${s.band > .5 ? 'black' : 'see-through'}, notch ${s.band > .5 ? 'hidden' : 'visible'}, ${s.corners ? (RAD_NAME[Math.round(s.radius)] || Math.round(s.radius) + ' pt') + ' corners' : 'square corners'}, ${phaseName(wp.time)}${s.displays > 1 ? `, ${s.displays} displays` : ''}`);
+    const aria = `${label}: menu bar ${s.band > .5 ? 'black' : 'see-through'}, notch ${s.band > .5 ? 'hidden' : 'visible'}, ${s.corners ? (RAD_NAME[Math.round(s.radius)] || Math.round(s.radius) + ' pt') + ' corners' : 'square corners'}, ${phaseName(wp.time)}${s.displays > 1 ? `, ${s.displays} displays` : ''}`;
+    if (aria !== lastAria) { lastAria = aria; el.setAttribute('aria-label', aria); }
     ev.emit('change', s, changed);
   }
   let filTarget = -1, filManual = false;
@@ -476,8 +481,9 @@ export function createPopover(el, { store, mirror = null, toast = null, appearan
   function drift() {
     cancelAnimationFrame(raf);
     if (!store.get().dynamic || !visible || document.hidden || isReduced()) return;
-    t0 = performance.now(); base = preview.wallpaper.time;
-    const step = now => { const t = (base + (now - t0) / 36000) % 1; screens().forEach(sc => sc.store.set({ time: t })); raf = requestAnimationFrame(step); };
+    t0 = performance.now(); base = preview.wallpaper.time; let last = 0;
+    // ~12 fps: a day per 36 s moves ~0.0002 of a day per 80 ms, invisible between frames
+    const step = now => { raf = requestAnimationFrame(step); if (now - last < 80) return; last = now; const t = (base + (now - t0) / 36000) % 1; screens().forEach(sc => sc.store.set({ time: t })); };
     raf = requestAnimationFrame(step);
   }
   drift();

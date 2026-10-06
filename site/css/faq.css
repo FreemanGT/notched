@@ -89,12 +89,18 @@
   #faq .faq__row[open]::details-content { block-size: auto; }
 }
 
-/* entrance: the first row's bar waits (open, no layout change) until the list has risen */
+/* entrance (JS stages it only when the list is below the fold; no fades, no layout change).
+   Row 1 holds its bar, then sweeps it in and keeps it; its answer is at full ink throughout.
+   Rows 2+ get a menu highlight running down the list: the bar crosses each empty row (--bx 0→1 from
+   the left), the question appears underneath (black on black, unseen), and the bar leaves to the right,
+   uncovering it at full ink. */
 #faq .faq__row.is-pre > summary::before { transform: scaleX(0); }
 #faq .faq__row.is-pre .faq__ink { clip-path: inset(0 100% 0 0); }
 #faq .faq__row.is-pre .faq__mk { transform: none; fill: transparent; stroke: #000; }
 #faq .faq__row.is-pre > summary::after { transform: scaleY(0); }
-#faq .faq__row.is-pre .faq__a { opacity: 0; transform: translateY(-10px); }
+#faq .faq__list .faq__row.is-wipe > summary::before { transform: scaleX(var(--bx, 0)); transform-origin: left; transition: none; }
+#faq .faq__list .faq__row.is-wipe.is-lit > summary::before { transform-origin: right; }
+#faq .faq__row.is-wipe:not(.is-lit) :is(.faq__q, .faq__mk) { opacity: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   #faq *, #faq *::before, #faq *::after, #faq .faq__row::details-content { transition: none !important; }

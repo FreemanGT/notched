@@ -1,16 +1,23 @@
-/* #privacy (SPEC §5.6): paper interlude. Black strip + concave fillets in, statements swept into menu bars. */
+/* #privacy (SPEC §5.6): the paper is a screen under the page's black. Its top edge is the band: the notch hangs
+   first, spreads into the menu bar, then the concave fillets click in. Each statement is a full-width menu bar. */
 #privacy {
   --rmax: clamp(40px, 8vw, 120px);
-  --pv-gap: clamp(28px, 5vw, 72px);   /* paper above the band: the band is a figure on paper, not part of the black above */
+  --pv-pad-x: clamp(12px, 1.4vw, 20px);   /* = #faq --pad-x: the same menu-bar inset as the FAQ sweeps */
   position: relative; overflow: clip;
-  padding-top: calc(var(--pv-gap) + var(--mb));
+  padding-top: var(--mb);
 }
 @media (max-width: 899px) { #privacy { --rmax: 48px; } }
 
 /* ---- band + concave fillets, as WallpaperRenderer bakes them: black quarter-circle fillets hang into the paper
    under each end of the band. Radius steps 0 → 10 → 14 → 20 pt (Small / Medium / Large) as the label changes.
    Fillets are drawn at --rmax (= 20 pt) and scaled (transform only) to the live radius. */
-#privacy .pv__strip { position: absolute; left: 0; right: 0; top: var(--pv-gap); height: var(--mb); z-index: 1; }
+#privacy .pv__strip { position: absolute; left: 0; right: 0; top: 0; height: var(--mb); z-index: 1; }
+/* The camera notch hangs from the black above; the band grows out of it (scaleX from centre) and swallows it. */
+#privacy .pv__notch {
+  position: absolute; top: 0; left: 50%; width: var(--notch-w); height: calc(var(--mb) - 2px);   /* tucked inside the band: no seam once it's swallowed */
+  margin-left: calc(var(--notch-w) / -2); background: #000;
+  border-radius: 0 0 calc(10 * var(--pt)) calc(10 * var(--pt));
+}
 #privacy .pv__strip::before {
   content: ""; position: absolute; inset: 0; background: #000;
   transform: scaleX(var(--pv-x, 1)); will-change: transform;
@@ -30,13 +37,18 @@
 #privacy .pv__rv { font-weight: inherit; color: #000; }
 
 /* ---- body */
-#privacy .pv__body { padding-block: calc(var(--sec-pad) + var(--rmax) * .4) var(--sec-pad); }
+#privacy .pv__body { padding-block: calc(var(--sec-pad) + var(--rmax) * .4) clamp(16px, 3vw, 48px); }   /* #faq's own top pad follows on the same paper */
 #privacy .pv__eyebrow { color: var(--on-paper-2); margin-bottom: clamp(20px, 3vw, 40px); }
-#privacy .pv__list { margin: 0; font: inherit; }
+#privacy .pv__list { margin: 0; font: inherit; display: grid; gap: clamp(4px, .6vw, 10px); }   /* stacked menu bars, not one slab */
 #privacy .pv__row {
   position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--gutter);
-  padding-block: clamp(10px, 1.4vw, 22px);
+  padding: clamp(10px, 1.4vw, 22px) var(--pv-pad-x);
 }
+/* The bar is the whole row: statement left, a mono status item right, like a menu bar. */
+#privacy .pv__row > .bandtext { display: flex; align-items: center; justify-content: space-between; gap: inherit; }
+#privacy .pv__row > .bandtext .pv__st, #privacy .pv__row > .bandtext .pv__meta b { color: #fff; }
+#privacy .pv__row > .bandtext .pv__meta { color: rgba(255,255,255,.62); }
+#privacy .pv__row > .bandtext .pv__rule { display: none; }
 #privacy .pv__row:first-child { border-top: 1px solid var(--paper-line); }
 #privacy .pv__rule {
   position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--paper-line);
@@ -45,9 +57,7 @@
 #privacy .pv__st {
   display: inline-block; white-space: nowrap; color: #000;
   font: 800 var(--t-statement)/.92 var(--f-display); letter-spacing: -.04em; font-variation-settings: "opsz" 96;
-  padding: .06em .14em .1em;   /* the bar breathes like a menu bar and starts on col 1 */
 }
-#privacy .pv__st .bandtext { color: var(--paper); }
 #privacy .pv__meta {
   flex: none; font-size: 11px; letter-spacing: .06em; color: var(--on-paper-2);
   text-transform: uppercase; align-self: flex-end; padding-bottom: .4em;
@@ -78,5 +88,7 @@
 @media (max-width: 419px) { #privacy .pv__st--long { font-variation-settings: "opsz" 96, "wdth" 78; } }
 
 /* Reduced / no-JS end state: final black bars, fillets at max. */
-html.still #privacy .pv__st, html:not(.js) #privacy .pv__st { background: #000; color: var(--paper); }
-html.still #privacy .pv__st .bandtext { display: none; }
+html.still #privacy .pv__row, html:not(.js) #privacy .pv__row { background: #000; }
+html.still #privacy .pv__st, html:not(.js) #privacy .pv__st, html.still #privacy .pv__meta b, html:not(.js) #privacy .pv__meta b { color: #fff; }
+html.still #privacy .pv__meta, html:not(.js) #privacy .pv__meta { color: rgba(255,255,255,.62); }
+html.still #privacy .pv__row > .bandtext { display: none; }

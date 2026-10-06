@@ -31,7 +31,9 @@
 #features .feat__rail button.is-on { color: #fff; background: #000; box-shadow: inset 0 0 0 1px var(--line-2), 0 1px 0 var(--rim) inset; }
 #features .feat__rail button.is-on i { height: 28px; opacity: 1; background: var(--fx-focus); }
 #features .feat__view { position: relative; height: 100%; overflow: clip; border-radius: 28px; background: radial-gradient(120% 90% at 50% 0%, var(--ink-2), #000 70%); box-shadow: inset 0 0 0 1px var(--line); isolation: isolate; }
-#features .feat__spill { position: absolute; inset: 18% 6% 10%; z-index: 0; overflow: hidden; border-radius: 40%; filter: blur(60px) saturate(1.3); opacity: .4; transform: scale(1.15); pointer-events: none; }
+/* a colour wash from the stage's hour: one gradient, no blur (features.js writes --sa/--sb) */
+#features .feat__spill { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .55; --sa: #FF9C5B; --sb: #C05479;
+  background: radial-gradient(60% 42% at 50% 58%, var(--sa) 0%, color-mix(in srgb, var(--sb) 55%, transparent) 38%, transparent 72%); transition: opacity var(--d-ui); }
 #features .feat__tilt { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; padding: 0 4%; transform: perspective(1600px) rotateX(6deg); transform-origin: 50% 40%;
   -webkit-mask-image: linear-gradient(#000 74%, transparent 96%); mask-image: linear-gradient(#000 74%, transparent 96%); }
 #features .feat__cam { position: relative; width: 100%; transform-origin: 0 0; will-change: transform; }
@@ -58,14 +60,25 @@
 #features .feat__chip i { width: 14px; height: 14px; border-radius: 4px; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.6); transition: background-color var(--d-micro), box-shadow var(--d-micro); }
 #features .feat__chip.is-checked i { background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3.5 7.2 6 9.6l4.6-5' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat; box-shadow: none; }
 
+/* 04/05 deck: our own pictures dealt between the wallpaper and the menu bar, so the band never moves */
+#features .fx-deck { position: absolute; inset: 0; z-index: 1; display: none; background: #050507; pointer-events: none; }
+#features .is-deck .fx-deck { display: block; }
+#features .fx-card { transform-origin: 50% 100%; will-change: transform; backface-visibility: hidden; }
+#features .fx-card.is-moving { border-radius: 3%; box-shadow: 0 1.5em 3em rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.14); }
+/* 06: the band lifts off the top edge as one piece */
+#features .nt-glass--main > .nt-band { transform: translate3d(0, calc(var(--lift, 0) * -100%), 0); }
+#features .nt-glass--main > .nt-fil { translate: 0 calc(var(--lift, 0) * -1 * var(--nt-mb)); }
+
 /* overlays inside the product glass (they inherit --pt and --r) */
-#features .fx-dim { position: absolute; z-index: 6; left: 0; top: var(--nt-mb); width: calc(var(--r) * var(--pt)); height: calc(var(--r) * var(--pt)); opacity: 0; pointer-events: none; --k: 1; }
-#features .fx-dim svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: none; stroke: var(--fx-focus); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
-#features .fx-dim path { vector-effect: non-scaling-stroke; }
-#features .fx-dim__arc, #features .fx-dim__r { stroke-dasharray: 1; stroke-dashoffset: var(--k); }
-#features .fx-dim__r { stroke-width: .8; opacity: .8; }
-#features .fx-dim__t { stroke-width: .8; }
-#features .fx-dim b { position: absolute; left: 112%; top: 100%; font: 600 4px/1 var(--f-mono); letter-spacing: .04em; color: var(--fx-focus); white-space: nowrap; transform: translateY(-50%); }
+#features .fx-macro { position: absolute; z-index: 9; inset: 0; opacity: 0; transform-origin: 0 12%; pointer-events: none; --k: 1; }
+#features .fx-macro svg { display: block; width: 100%; height: 100%; }
+#features .fx-macro__blk { fill: #000; }
+#features .fx-macro > svg > text { fill: #fff; font: 700 46px/1 var(--f-text); letter-spacing: -.01em; }
+#features .fx-macro__arc, #features .fx-macro__r { fill: none; stroke: var(--fx-focus); stroke-dasharray: 1; stroke-dashoffset: var(--k); stroke-linecap: round; }
+#features .fx-macro__arc { stroke-width: 3; }
+#features .fx-macro__r { stroke-width: 1.5; opacity: .8; }
+#features .fx-macro__lbl rect { fill: rgba(0,0,0,.84); stroke: rgba(255,255,255,.22); }
+#features .fx-macro__lbl text { fill: #fff; font: 600 14px/1 var(--f-mono); letter-spacing: .06em; }
 #features .fx-ring { position: absolute; left: 50%; top: 50%; width: 260%; height: auto; aspect-ratio: 1; transform: translate(-50%, -50%) rotate(-90deg); fill: none; stroke: var(--fx-focus); stroke-width: 2.4; opacity: 0;
   stroke-dasharray: 1; stroke-dashoffset: var(--k, 1); overflow: visible; pointer-events: none; transition: opacity var(--d-micro); }
 

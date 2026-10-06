@@ -8,22 +8,25 @@ export default function init(root, ctx) {
   const store = stores.hero, html = document.documentElement;
   const $ = (s) => root.querySelector(s);
   const stage = $('.hero__stage'), content = $('.hero__content'), wall = $('.hero__wall');
-  const word = $('[data-swallow]'), pod = $('.hero__pod'), dot = $('.hero__dot'), cap = $('.hero__cap');
+  const word = $('[data-swallow]'), bar = $('.hero__bar'), cap = $('.hero__cap');
   const hint = $('.hero__hint'), toggle = $('[data-hero-toggle]');
-  const notch = document.querySelector('[data-nav-notch]');
+  const notch = document.querySelector('[data-nav-notch]'), navEl = document.getElementById('nav');
   const offs = [];
 
   // The screen: wallpaper, parallax, aria state. Its menu bar/notch are drawn by the nav (hero.css hides them),
   // so the notch toys live on the nav notch below. ponytail: interactive:false, the screen's own hit sits under the nav.
   const screen = Component?.createScreen($('[data-hero-screen]'), { store, mode: 'viewport', interactive: false, parallax: true, follow: true, settings, clock: false, label: 'MacBook screen' });
 
-  // ---- band = max(scroll, drag); time = page time + scroll drift ----
-  const P = { sb: 0, drift: 0 };
+  // ---- band = max(scroll, drag); time = page time, pulled to night by the scrub ----
+  const P = { sb: 0, night: 0, r: 0 };
   let drag = 0, lastT = -1;
   const writeBand = () => store.set({ band: Math.max(P.sb, drag) });
   const writeTime = () => {
-    const t = (stores.time.state.t + P.drift) % 1;
+    const t0 = stores.time.state.t, d = 0.5 - ((t0 + 0.75) % 1);   // shortest step to night (.75); a half-turn goes forward (day → dusk → night)
+    const t = (((t0 + P.night * d) % 1) + 1) % 1;
     if (Math.abs(t - lastT) > 4e-4) { lastT = t; store.set({ time: t }); }
+    const ph = lib.phaseOf(t);
+    if (root.dataset.phase !== ph) root.dataset.phase = ph;
   };
   offs.push(stores.time.subscribe(writeTime, { now: true }));
 
@@ -39,9 +42,9 @@ export default function init(root, ctx) {
     if (now - pbT < 90 && v !== 100 && v !== 0) { pbTimer = setTimeout(plateBand, 90); return; }   // rate-limit the roller
     pb = v; pbT = now; lib.roll(plate.band, `${pad3(v)}%`, { duration: 0.3 });
   };
-  let pc = '';
+  let pc = '', scrubR = null;
   const plateCorners = () => {
-    const s = settings.state, v = `${s.corners ? `${s.radius} PT` : 'OFF'} · ${phase()}`;
+    const s = settings.state, r = scrubR == null ? (s.corners ? s.radius : 0) : scrubR, v = `${r ? `${r} PT` : 'OFF'} · ${phase()}`;
     if (v !== pc) { pc = v; lib.roll(plate.corners, v); }
   };
   offs.push(store.subscribe(() => { plateBand(); plateCorners(); syncToggle(); }, { now: true }));
@@ -131,8 +134,8 @@ export default function init(root, ctx) {
   if ((full || quick) && !lib.reduced()) {
     if (full) root.classList.add('is-intro');
     dragO.v = 0;
-    intro = gsap.to(dragO, { v: 1, duration: full ? 0.8 : 0.4, delay: full ? Math.max(0, 0.5 - performance.now() / 1000) : 0, ease: lib.EASE.sweep,
-      onUpdate: () => { drag = clamp(dragO.v); writeBand(); } });
+    intro = gsap.to(dragO, { v: 1, duration: full ? 0.8 : 0.4, delay: full ? Math.max(0, 1.75 - performance.now() / 1000) : 0, ease: lib.EASE.sweep,
+      onUpdate: () => { drag = clamp(dragO.v); writeBand(); }, onComplete: () => gsap.delayedCall(0.6, dropHint) });
     const skip = () => { if (intro?.isActive() || intro?.progress() === 0) intro.progress(1); root.classList.remove('is-intro'); };
     const evs = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
     evs.forEach((t) => addEventListener(t, skip, { once: true, passive: true }));
@@ -150,7 +153,7 @@ export default function init(root, ctx) {
   mm.add(MQ, (c) => {
     const { desk, still } = c.conditions;
     if (still) {
-      P.sb = 1; P.drift = 0; drag = 1;
+      P.sb = 1; P.night = 0; drag = 1;
       store.set({ band: 1, progress: 1 });
       screen?.setRadius(settings.state.radius, { duration: 0 });
       writeTime(); syncToggle();
@@ -162,7 +165,7 @@ export default function init(root, ctx) {
     const split = desk ? SplitText.create(word, { type: 'chars', charsClass: 'hero__ch', aria: 'none' }) : null;
     const parts = split ? split.chars : [word];
     const fixWidths = () => parts.forEach((el) => { el.style.width = ''; el.style.width = `${el.offsetWidth}px`; });
-    if (split) fixWidths();
+    fixWidths();   // wdth 100→75 must not reflow the line: the bar and the period hold their places
     const centre = (el) => {
       let x = el.offsetWidth / 2, y = el.offsetHeight / 2, n = el;
       while (n && n !== stage) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
@@ -174,50 +177,49 @@ export default function init(root, ctx) {
 
     const tl = gsap.timeline({
       defaults: { ease: 'none' },
-      scrollTrigger: { trigger: root, start: 'top top', end: 'bottom bottom', scrub: 0.5, invalidateOnRefresh: true, onRefreshInit: () => split && fixWidths(), onRefresh: () => requestAnimationFrame(tick) },
+      scrollTrigger: { trigger: root, start: 'top top', end: 'bottom bottom', scrub: 0.5, invalidateOnRefresh: true, onRefreshInit: fixWidths, onRefresh: () => requestAnimationFrame(tick) },
       onUpdate: tick,
     });
 
-    // .02 → .08: the hint steps aside while you scroll
-    if (hint) tl.to(hint, { opacity: 0, duration: 0.06 }, 0.02);
-    // .06 → .20: "notch" physically leaves. Its letters squeeze into a black capsule (.06 → .11), the capsule
-    // flies up into the camera housing and becomes it (.11 → .19), the housing widens for a beat to swallow it,
-    // and the period snaps left to close the gap (.20 → .25). Then the band floods outward from the notch.
-    const SW = 0.06, FLY = 0.11, GULP = 0.185;
-    const wc = (el) => word.offsetWidth / 2 - (el.offsetLeft + el.offsetWidth / 2);   // char → word centre (chars share the word's offsetParent)
-    parts.forEach((el, i) => {
-      const at = SW + Math.abs(i - (parts.length - 1) / 2) * (desk ? 0.004 : 0);
-      tl.fromTo(el, { fontVariationSettings: '"opsz" 96, "wdth" 100' }, { fontVariationSettings: '"opsz" 96, "wdth" 75', x: () => (split ? wc(el) : 0), scaleY: 0.2, scaleX: 0.5, duration: FLY - at, ease: 'power2.in' }, at)
-        .to(el, { opacity: 0, duration: 0.02 }, FLY - 0.025);
-    });
-    const nw = () => (notch?.offsetWidth || 180), nh = () => (notch?.offsetHeight || 32);
-    tl.fromTo(pod, { opacity: 0, scaleX: 1, scaleY: 1 }, { opacity: 1, scaleX: 0.72, scaleY: 0.55, duration: FLY - SW, ease: 'power2.in' }, SW)
-      .to(pod, { x: () => dx(pod), y: () => dy(pod), scaleX: () => nw() / pod.offsetWidth, scaleY: () => nh() / pod.offsetHeight, borderRadius: '0 0 30% 30% / 0 0 60% 60%',
-        duration: GULP - FLY, ease: lib.EASE.swallow }, FLY)
-      .to(pod, { opacity: 0, duration: 0.012 }, GULP - 0.006);
-    if (notch) tl.to(notch, { scaleX: 1.42, scaleY: 1.22, transformOrigin: '50% 0', duration: 0.02, ease: 'power2.out' }, GULP - 0.004)
-      .to(notch, { scaleX: 1, scaleY: 1, duration: 0.05, ease: 'back.out(2.6)' }, GULP + 0.016);
-    // the period closes the gap: it lands right after "the" (layout offsets, so transforms never feed back)
-    const dotX = () => { const t = word.parentNode.previousSibling; const r = document.createRange();
-      r.setStart(t, 0); r.setEnd(t, t.textContent.trimEnd().length);
-      return r.getBoundingClientRect().right - (dot.getBoundingClientRect().left - gsap.getProperty(dot, 'x')) + 0.01 * dot.offsetHeight; };
-    tl.fromTo(dot, { x: 0 }, { x: dotX, duration: 0.05, ease: lib.EASE.knob }, 0.2);
-    // .20 → .50: the band floods outward from the notch
-    tl.to(P, { sb: 1, duration: 0.3, ease: lib.EASE.sweep }, 0.2);
-    // .10 → .80: the light drifts a little
-    tl.to(P, { drift: 0.12, duration: 0.7 }, 0.1);
-    // .26 → .42: the caption sweeps open under "Black out the."
-    tl.fromTo(cap, { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: 0.16, ease: lib.EASE.sweep }, 0.26);
-    // .75 → 1: the camera moves through the glass (bezel strips: nav, from progress)
-    root.querySelectorAll('.hero__ridge').forEach((r, i) => tl.to(r, { yPercent: -(i + 1) * 1.6, duration: 0.8 }, 0.1));
-    tl.fromTo(wall, { scale: 1 }, { scale: 1.08, duration: 0.25 }, 0.75)
-      .fromTo($('.hero__dim'), { opacity: 0 }, { opacity: 0.4, duration: 0.25 }, 0.75)
-      .fromTo($('.hero__spill'), { opacity: 0.22 }, { opacity: 0.08, duration: 0.25 }, 0.75)
-      .to(content, { y: () => -0.08 * innerHeight, duration: 0.25 }, 0.75)
-      // the poster at 1 keeps "Black out / the [GONE]." and the caption; the rest steps back
-      .to(root.querySelectorAll('.hero__chips, .hero__lede, .hero__actions, .hero__note, .hero__plate'), { opacity: 0, duration: 0.12 }, 0.88);
+    // Round 2 beats (desk + mob, one timeline):
+    // .00 → .04  the hint steps aside
+    // .04 → .22  band 0→1 (if a toggle turned it off) and, at the same speed, the redaction bar sweeps across "notch"; it stays
+    // .06 → .30  corners 0 → 14 pt (Medium)
+    // .28 → .46  the letters lift out of the bar and drop up into the camera housing; the housing gulps them
+    // .46 → .58  the caption sweeps open: "Gone. Well, it's still there. You just can't see it."
+    // .50 → .66  corners 14 → 20 pt (Large)
+    // .10 → .80  the light runs on to night (shortest way round from the visitor's time)
+    // .55 → .92  the camera pulls back: the full-bleed wallpaper becomes a framed screen under the black bar
+    const SWEEP = 0.04, LIFT = 0.28, GULP = 0.46;
+    if (hint) tl.to(hint, { opacity: 0, duration: 0.04 }, 0);
+    tl.to(P, { sb: 1, duration: 0.18, ease: lib.EASE.sweep }, SWEEP)
+      .fromTo(bar, { clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.18, ease: lib.EASE.sweep }, SWEEP)
+      .to(P, { r: 14, duration: 0.24, ease: lib.EASE.fillet }, 0.06)
+      .to(P, { r: 20, duration: 0.16, ease: lib.EASE.fillet }, 0.5)
+      .to(P, { night: 1, duration: 0.7, ease: 'power1.inOut' }, 0.1);
 
-    let past = false;
+    // the letters sit under the bar (z below it): they rise out of its top edge, pinch into slivers, and are pulled into the housing
+    parts.forEach((el, i) => {
+      const at = LIFT + Math.abs(i - (parts.length - 1) / 2) * (desk ? 0.008 : 0);
+      tl.fromTo(el, { fontVariationSettings: '"opsz" 96, "wdth" 100' }, { fontVariationSettings: '"opsz" 96, "wdth" 75', scaleY: 0.3, scaleX: 0.5, duration: 0.07, ease: 'power2.out', immediateRender: false }, at + 0.03)
+        .to(el, { x: () => dx(el), y: () => dy(el), duration: GULP - 0.012 - at, ease: 'power2.in' }, at)
+        .to(el, { opacity: 0, duration: 0.012 }, GULP - 0.014);
+    });
+    if (notch) tl.to(notch, { scaleX: 1.3, scaleY: 1.18, transformOrigin: '50% 0', duration: 0.02, ease: 'power2.out' }, GULP - 0.006)
+      .to(notch, { scaleX: 1, scaleY: 1, duration: 0.05, ease: 'back.out(2.6)' }, GULP + 0.014);
+    tl.fromTo(cap, { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: 0.12, ease: lib.EASE.sweep }, GULP);
+
+    // the pull-back (Apple's scale-out beat): the wallpaper shrinks about the band line, its rim lights, the far ridges settle
+    const S = desk ? 0.8 : 0.88;
+    root.querySelectorAll('.hero__ridge').forEach((r, i) => tl.to(r, { yPercent: -(i + 1) * 1.6, duration: 0.8 }, 0.1));
+    tl.fromTo(wall, { scale: 1, '--pull': 0 }, { scale: S, '--pull': 1, duration: 0.37, ease: 'power2.inOut' }, 0.55)
+      .fromTo($('.hero__dim'), { opacity: 0 }, { opacity: 0.18, duration: 0.37 }, 0.55)
+      .fromTo($('.hero__spill'), { opacity: 0.22 }, { opacity: 0.1, duration: 0.25 }, 0.67)
+      .to(content, { y: () => -0.06 * innerHeight, duration: 0.25 }, 0.75)
+      // the poster at 1 keeps "Black out / the ████." and the caption; the rest steps back
+      .to(root.querySelectorAll('.hero__chips, .hero__toggle, .hero__lede, .hero__actions, .hero__note, .hero__plate'), { opacity: 0, duration: 0.1 }, 0.9);
+
+    let past = false, navOwned = null;
     function tick() {
       // A refresh reverts tl to 0 to measure and restores it silently: writing that 0 would leave the global bar grey.
       if (ctx.ScrollTrigger.isRefreshing) return;
@@ -225,12 +227,19 @@ export default function init(root, ctx) {
       store.set({ band: Math.max(P.sb, drag), progress: p });
       writeTime();
       // .50: threshold, both ways, not scrubbed. Nav scrambles itself from band/progress.
-      if (p >= 0.5 && !past) { past = true; screen?.setRadius(settings.state.radius); hidden(); }
-      else if (p < 0.5 && past) past = false;
+      if (p >= GULP && !past) { past = true; hidden(); }
+      else if (p < GULP && past) past = false;
+      // corners: the wallpaper's own fillets carry the scrub; the nav's stay at 0 until the hero is done (then settings.radius)
+      const r = Math.round(P.r * 10) / 10;
+      root.style.setProperty('--hr', r);
+      const own = p < 0.999;
+      if (navEl && own !== navOwned) { navOwned = own; own ? navEl.style.setProperty('--r-site-pt', '0') : navEl.style.removeProperty('--r-site-pt'); }
+      const rr = p < 0.999 ? (P.r < 7 ? 0 : P.r < 17 ? 14 : 20) : null;
+      if (rr !== scrubR) { scrubR = rr; plateCorners(); }
     }
     tick();
 
-    return () => { split?.revert(); gsap.set([pod, dot], { clearProps: 'all' }); if (notch) gsap.set(notch, { scaleX: 1, scaleY: 1 }); past = false; };
+    return () => { split?.revert(); gsap.set([bar, word], { clearProps: 'all' }); if (notch) gsap.set(notch, { scaleX: 1, scaleY: 1 }); navEl?.style.removeProperty('--r-site-pt'); root.style.removeProperty('--hr'); scrubR = null; past = false; };
   });
 
   return () => { offs.forEach((f) => f()); screen?.destroy?.(); mm.revert(); };

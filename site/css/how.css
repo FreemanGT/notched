@@ -1,5 +1,5 @@
 /* #how (SPEC §5.5): "It's just a picture." Exploded view of the four layers. Every rule scoped under #how. */
-#how { --o: 0; --sep: 0; --rim: 1; --push: 0; --knob: cubic-bezier(.3,1.3,.5,1); background: var(--black); color: var(--fg); }
+#how { --o: 0; --sep: 0; --bake: 0; --rim: 1; --push: 0; --knob: cubic-bezier(.3,1.3,.5,1); background: var(--black); color: var(--fg); }
 
 /* ---------------------------------------------------------------- copy column */
 #how .how__title { margin: 0 0 clamp(28px, 4.5vh, 48px); max-width: 9ch; }
@@ -22,20 +22,19 @@
 #how .how__plane--copy .how__face { overflow: visible; }
 #how .how__plane--copy .how__face::after { content: ""; position: absolute; inset: -7px; border: 1px dashed var(--line-2); border-radius: calc(1.4cqw + 7px); pointer-events: none; opacity: calc(.15 + var(--sep) * .85); }
 #how .how__plane--copy .how__wp { border-radius: inherit; overflow: hidden; }
-/* the strip lives on a transparent sheet: faint checker reads as "nothing here but the band" */
-/* the strip lives on a clear sheet: just an edge, so the black bar is the only thing on it */
-#how .how__plane--strip .how__face { background: linear-gradient(rgba(118,169,255,.2), rgba(118,169,255,.05) 55%, rgba(118,169,255,.02)); }
 
 #how .how__slab { position: absolute; z-index: 2; inset: 0 0 auto; height: calc(37 * var(--p)); }
-#how .how__band { position: absolute; inset: 0; background: #000; }
+#how .how__band { position: absolute; inset: 0; background: #000; display: flex; align-items: center; justify-content: flex-end; padding-right: calc(150 * var(--p)); }
+/* a height bracket + label on the band itself: what it measures, never a number */
+#how .how__dim { position: relative; display: flex; align-items: center; height: 100%; padding-left: max(7px, calc(12 * var(--p)));
+  font: 500 max(7.5px, calc(12 * var(--p)))/1 var(--f-mono); font-stretch: 87.5%; letter-spacing: .08em; text-transform: uppercase; color: #fff; white-space: nowrap; }
+#how .how__dim::before { content: ""; position: absolute; left: 0; top: 14%; bottom: 14%; width: max(4px, calc(6 * var(--p))); border: 1px solid rgba(255,255,255,.75); border-right: 0; }
+/* the bake: one white frame as the band lands */
+#how .how__flash { position: absolute; z-index: 7; inset: 0; border-radius: inherit; background: #fff; opacity: 0; pointer-events: none; }
 #how .how__fil { position: absolute; top: 100%; width: calc(14 * var(--p)); height: calc(14 * var(--p)); }
 #how .how__fil--l { left: 0; background: radial-gradient(circle calc(14 * var(--p)) at 100% 100%, transparent 98%, #000 100%); }
 #how .how__fil--r { right: 0; background: radial-gradient(circle calc(14 * var(--p)) at 0 100%, transparent 98%, #000 100%); }
-/* rim light: the slab catches the copy's light from below */
-#how .how__plane--strip .how__band { box-shadow: 0 0 0 1px rgba(255,255,255,.7), 0 0 calc(30 * var(--p)) calc(4 * var(--p)) rgba(118,169,255,.65); }
 #how .how__plane--strip .how__face::after { content: ""; position: absolute; z-index: 5; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); pointer-events: none; }
-#how .how__plane--strip .how__fil { filter: drop-shadow(0 0 calc(6 * var(--p)) rgba(140,190,255,.95)) drop-shadow(0 0 1px rgba(255,255,255,.9)); }
-#how .how__plane--strip .how__spill { opacity: var(--sep); background: radial-gradient(90% 38% at 50% 0%, rgba(118,169,255,.55), rgba(107,227,208,.1) 60%, transparent 80%); }
 
 #how .how__menu { position: absolute; z-index: 3; inset: 0 0 auto; height: calc(37 * var(--p)); display: flex; align-items: center; justify-content: space-between;
   padding-inline: calc(22 * var(--p)); font: 500 calc(13 * var(--p))/1 var(--f-mac); word-spacing: calc(11 * var(--p)); color: #fff; white-space: nowrap; }
@@ -49,13 +48,10 @@
 
 #how .how__spill { position: absolute; z-index: 1; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: calc(var(--sep) * .8);
   background: radial-gradient(120% 75% at 50% 115%, rgba(118,169,255,.6), rgba(107,227,208,.12) 55%, transparent 75%); }
-#how .how__plane--desk .how__spill { opacity: calc(var(--sep) * .45); }
-/* Spread: the desk plane sits over the strip's band edge; its picture thins to a ghost so the black strip below reads. */
-#how .how__plane--desk .how__wp { opacity: calc(1 - var(--sep) * .9); }
 
 /* ---------------------------------------------------------------- desk: sticky exploded view */
 @media (min-width: 900px) and (prefers-reduced-motion: no-preference) {
-  #how { height: 180vh; }
+  #how { height: 220vh; }
   #how .how__stage { position: sticky; top: 0; height: 100vh; display: flex; align-items: center; overflow: clip; }
   #how .how__copy { grid-column: 1 / span 5; position: relative; z-index: 2; }
   #how .how__view { grid-column: 6 / -1; position: relative; height: min(88vh, 820px); }
@@ -69,7 +65,22 @@
     transition: translate .55s var(--knob); }
   #how .how__plane:focus-visible, #how .how__plane[aria-pressed="true"] { --lift: 1; }
   @media (hover: hover) and (pointer: fine) { #how .how__plane:hover { --lift: 1; } }
+  /* the strip falls onto the copy (--bake 0→1) before the rest of the stack folds */
+  #how .how__plane.how__plane--strip { transform: translateZ(calc(var(--sep) * (2 - var(--bake)) * 120px + 1.2px)); }
   #how.is-live .how__rig, #how.is-live .how__plane { will-change: transform; }
+
+  /* strip: nothing but an opaque black band on a clear sheet, rim-lit by the copy below; the rim goes out as it's baked in */
+  #how .how__plane--strip .how__wp { display: none; }
+  /* once baked, a faint seam stays so the band still reads on the copy (black on a black page) until the desk plane covers it */
+  #how .how__plane--strip { --seam: calc(1 - var(--bake) * .7); }
+  #how .how__plane--strip .how__band { box-shadow: 0 0 0 1px rgb(255 255 255 / calc(.8 * var(--seam))), 0 0 calc(34 * var(--p)) calc(5 * var(--p)) rgb(118 169 255 / calc(.7 * (1 - var(--bake)))); }
+  #how .how__plane--strip .how__fil { filter: drop-shadow(0 0 calc(6 * var(--p)) rgb(140 190 255 / calc(.95 * (1 - var(--bake))))) drop-shadow(0 0 1px rgb(255 255 255 / calc(.9 * var(--seam)))); }
+  #how .how__plane--strip .how__face::after { opacity: calc(1 - var(--bake)); }
+  #how .how__plane--strip .how__dim { opacity: calc(1 - var(--bake)); }
+  #how .how__plane--strip .how__spill { opacity: calc(var(--sep) * (1 - var(--bake))); background: radial-gradient(90% 42% at 50% 0%, rgba(118,169,255,.6), rgba(107,227,208,.12) 60%, transparent 80%); }
+  /* desk: while spread it's the screen alone (menu text + notch on glass); the composite fills in as the stack folds */
+  #how .how__plane--desk .how__wp, #how .how__plane--desk .how__slab { opacity: calc(1 - var(--sep)); }
+  #how .how__plane--desk .how__spill { display: none; }
   #how .how__glow { position: absolute; inset: -30% -25%; transform: translateZ(-90px); border-radius: 50%; pointer-events: none; opacity: var(--sep);
     background: radial-gradient(closest-side, rgba(59,113,254,.42), rgba(107,227,208,.1) 62%, transparent); }
 
@@ -109,8 +120,8 @@
   #how .how__step:nth-child(1) { order: 2; }  #how .how__tag:nth-child(1) { order: 3; }  #how .how__plane--orig  { order: 4; }
   #how .how__tag:nth-child(2) { order: 5; }   #how .how__plane--copy  { order: 6; }
   #how .how__step:nth-child(2) { order: 7; }  #how .how__tag:nth-child(3) { order: 8; }  #how .how__plane--strip { order: 9; }
-  #how .how__step:nth-child(3) { order: 10; } #how .how__tag:nth-child(4) { order: 11; } #how .how__plane--desk  { order: 12; }
-  #how .how__step:nth-child(4) { order: 13; }
+  #how .how__step:nth-child(3) { order: 10; } #how .how__step:nth-child(4) { order: 11; }
+  #how .how__tag:nth-child(4) { order: 12; } #how .how__plane--desk  { order: 13; }
   #how .how__stamp { order: 14; align-self: flex-start; margin: 22px 0 0 30px; max-width: calc(100% - 30px); white-space: normal; line-height: 1.4; }
   #how .how__foot { order: 15; margin: 40px 0 0 30px; }
 
@@ -126,7 +137,8 @@
   #how .how__grid::before { content: ""; position: absolute; z-index: 0; left: calc(var(--margin) + 3px); top: var(--l0, 0); height: var(--lh, 0); width: 1px;
     background: linear-gradient(var(--fg-3), var(--line-2)); transform-origin: 0 0; transform: scaleY(var(--draw, 1)); }
   #how { --sep: .6; }
-  #how .how__plane--desk .how__wp { opacity: 1; }
+  /* 02's card is the bake itself: the copy, with the band dropped onto it (JS scrubs the drop) */
+  #how .how__plane--strip .how__spill { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { #how { --rim: 0; } }
 @media (prefers-reduced-motion: reduce) {

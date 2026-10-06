@@ -210,14 +210,19 @@ body::after {
   position: fixed; inset: 0 0 auto; z-index: var(--z-nav); height: var(--mb);
   color: var(--ink); font: 400 max(12px, calc(13 * var(--pt)))/1 var(--f-mac);
 }
+/* Band off: an opaque menu bar tinted with the hero wallpaper's top row (the --wp-*-top tokens), lifted a touch
+   like macOS glass. Opaque on purpose: page copy scrolling under it must never show through. */
+.nav { --tint: var(--wp-night-top); }
+html[data-phase="dawn"] .nav { --tint: var(--wp-dawn-top); }
+html[data-phase="day"] .nav { --tint: var(--wp-day-top); }
+html[data-phase="dusk"] .nav { --tint: var(--wp-dusk-top); }
 .nav__glass {
-  position: absolute; inset: 0; background: rgba(255,255,255,.18);
-  -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4);
-  transition: opacity var(--d-ui) linear;
+  position: absolute; inset: 0; background: color-mix(in srgb, var(--tint), #fff 14%);
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,.08);
+  transition: opacity var(--d-ui) linear, background-color 900ms var(--e-inout);
 }
-@media (max-width: 899px) { .nav__glass { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(255,255,255,.5); } }
 .nav.is-black { background: #000; color: #fff; }
-html[data-phase="dawn"] .nav:not(.is-black), html[data-phase="day"] .nav:not(.is-black) { --ink: rgba(11,11,12,.85); }
+html[data-phase="day"] .nav:not(.is-black) { --ink: rgba(11,11,12,.85); }
 .nav__row > .bandtext { color: #fff; }
 .nav.is-black .nav__glass { opacity: 0; }
 .nav__row {
@@ -319,6 +324,10 @@ html { transition: --r-site-pt 500ms var(--e-fillet); }
   box-shadow: inset 0 0 0 1px var(--line-2), 0 10px 30px rgba(0,0,0,.4);
   font: 450 12px/1.2 var(--f-mono); font-stretch: 87.5%; letter-spacing: .02em;
   transform-origin: 50% 0;
+}
+.toast--bar {
+  height: var(--notch-h); line-height: var(--notch-h); max-width: calc(100vw - 16px); padding: 0 16px; text-align: center;
+  overflow: hidden; text-overflow: ellipsis; border-radius: 0 0 10px 10px; box-shadow: none;
 }
 
 /* ------------------------------------------------------------------ ghost cursor (lib/ghost.js) */
@@ -535,17 +544,28 @@ html.sheet-open { overflow: hidden; scrollbar-gutter: stable; }
 }
 
 /* ---- css/hero.css */
+@property --hw-top { syntax: "<color>"; inherits: true; initial-value: #000; }
+@property --hw-mid { syntax: "<color>"; inherits: true; initial-value: #000; }
+@property --hw-hz { syntax: "<color>"; inherits: true; initial-value: #000; }
+@property --hw-sun { syntax: "<color>"; inherits: true; initial-value: #000; }
+@property --hw-bloom-x { syntax: "<percentage>"; inherits: true; initial-value: 50%; }
+@property --hw-bloom-y { syntax: "<percentage>"; inherits: true; initial-value: 50%; }
 /* #hero: "Black out the notch." (SPEC §5.1). The viewport is the glass; the fixed .nav is its menu bar. */
 #hero { position: relative; height: 180vh; background: #000; }
 #hero .hero__stage { position: sticky; top: 0; height: 100vh; overflow: clip; isolation: isolate; }
 
 /* wallpaper: CSS sky first paint, then the procedural screen on top */
-#hero .hero__wall { position: absolute; inset: 0; transform-origin: 50% 30%; will-change: transform; }
+/* transform-origin on the band line: the pull-back (hero.js, .55 → .92) keeps the wallpaper's top under the black bar,
+   so the band becomes the top bezel and the wallpaper a framed screen. --pull (0..1) lights its rim. */
+#hero .hero__wall { position: absolute; inset: 0; transform-origin: 50% var(--mb); will-change: transform; --pull: 0;
+  border-radius: 0 0 calc(18 * var(--pt)) calc(18 * var(--pt));
+  box-shadow: 0 0 0 1px rgba(255,255,255,calc(.14 * var(--pull))), 0 30px 120px -20px rgba(0,0,0,calc(.9 * var(--pull)));
+  transition: --hw-top 900ms var(--e-out), --hw-mid 900ms var(--e-out), --hw-hz 900ms var(--e-out), --hw-sun 900ms var(--e-out), --hw-bloom-x 900ms var(--e-out), --hw-bloom-y 900ms var(--e-out); }
 #hero .hero__sky, #hero .hero__screen, #hero .hero__dim, #hero .hero__fade { position: absolute; inset: 0; }
 #hero .hero__sky { --a: var(--wp-day-top); --b: var(--wp-day-mid); --c: var(--wp-day-hz); background: linear-gradient(180deg, var(--a), var(--b) 52%, var(--c)); }
-html[data-phase="dawn"] #hero .hero__sky { --a: var(--wp-dawn-top); --b: var(--wp-dawn-mid); --c: var(--wp-dawn-hz); }
-html[data-phase="dusk"] #hero .hero__sky { --a: var(--wp-dusk-top); --b: var(--wp-dusk-mid); --c: var(--wp-dusk-hz); }
-html[data-phase="night"] #hero .hero__sky { --a: var(--wp-night-top); --b: var(--wp-night-mid); --c: var(--wp-night-hz); }
+:is(html[data-phase="dawn"] #hero:not([data-phase]), #hero[data-phase="dawn"]) .hero__sky { --a: var(--wp-dawn-top); --b: var(--wp-dawn-mid); --c: var(--wp-dawn-hz); }
+:is(html[data-phase="dusk"] #hero:not([data-phase]), #hero[data-phase="dusk"]) .hero__sky { --a: var(--wp-dusk-top); --b: var(--wp-dusk-mid); --c: var(--wp-dusk-hz); }
+:is(html[data-phase="night"] #hero:not([data-phase]), #hero[data-phase="night"]) .hero__sky { --a: var(--wp-night-top); --b: var(--wp-night-mid); --c: var(--wp-night-hz); }
 #hero .nt-screen { animation: hero-in 500ms var(--e-out) backwards; }
 /* the nav draws this screen's menu bar, band, notch and fillets (same node, no seam) */
 #hero .nt-mb, #hero .nt-band, #hero .nt-slot, #hero .nt-fil, #hero .nt-notch, #hero .nt-notch-hit, #hero .nt-flash { display: none; }
@@ -555,43 +575,46 @@ html[data-phase="night"] #hero .hero__sky { --a: var(--wp-night-top); --b: var(-
    perspective (haze → ink), a sun-coloured rim on every crest, a bloom behind them. Replaces the component's
    faint white hills here only. */
 #hero .nt-wp__land { display: none; }
-#hero .hero__wall { --top: var(--wp-day-top); --mid: var(--wp-day-mid); --hz: var(--wp-day-hz); --sun: var(--wp-day-sun); --bloom-x: 70%; --bloom-y: 52%; }
-html[data-phase="dawn"] #hero .hero__wall { --top: var(--wp-dawn-top); --mid: var(--wp-dawn-mid); --hz: var(--wp-dawn-hz); --sun: var(--wp-dawn-sun); --bloom-x: 24%; --bloom-y: 60%; }
-html[data-phase="dusk"] #hero .hero__wall { --top: var(--wp-dusk-top); --mid: var(--wp-dusk-mid); --hz: var(--wp-dusk-hz); --sun: var(--wp-dusk-sun); --bloom-x: 76%; --bloom-y: 60%; }
-html[data-phase="night"] #hero .hero__wall { --top: var(--wp-night-top); --mid: #2A3A7A; --hz: #4B5FA8; --sun: var(--wp-night-sun); --bloom-x: 26%; --bloom-y: 40%; }
+#hero .hero__wall { --hw-top: var(--wp-day-top); --hw-mid: var(--wp-day-mid); --hw-hz: var(--wp-day-hz); --hw-sun: var(--wp-day-sun); --hw-bloom-x: 70%; --hw-bloom-y: 52%; }
+:is(html[data-phase="dawn"] #hero:not([data-phase]), #hero[data-phase="dawn"]) .hero__wall { --hw-top: var(--wp-dawn-top); --hw-mid: var(--wp-dawn-mid); --hw-hz: var(--wp-dawn-hz); --hw-sun: var(--wp-dawn-sun); --hw-bloom-x: 24%; --hw-bloom-y: 60%; }
+:is(html[data-phase="dusk"] #hero:not([data-phase]), #hero[data-phase="dusk"]) .hero__wall { --hw-top: var(--wp-dusk-top); --hw-mid: var(--wp-dusk-mid); --hw-hz: var(--wp-dusk-hz); --hw-sun: var(--wp-dusk-sun); --hw-bloom-x: 76%; --hw-bloom-y: 60%; }
+:is(html[data-phase="night"] #hero:not([data-phase]), #hero[data-phase="night"]) .hero__wall { --hw-top: var(--wp-night-top); --hw-mid: #2A3A7A; --hw-hz: #4B5FA8; --hw-sun: var(--wp-night-sun); --hw-bloom-x: 26%; --hw-bloom-y: 40%; }
 #hero .hero__bloom { position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(28% 34% at var(--bloom-x) var(--bloom-y), color-mix(in oklab, var(--sun) 85%, transparent), transparent 70%),
-              radial-gradient(70% 45% at var(--bloom-x) 70%, color-mix(in oklab, var(--hz) 70%, transparent), transparent 75%); }
-html[data-phase="dusk"] #hero .hero__bloom, html[data-phase="dawn"] #hero .hero__bloom { filter: saturate(1.35); }
+  background: radial-gradient(28% 34% at var(--hw-bloom-x) var(--hw-bloom-y), color-mix(in oklab, var(--hw-sun) 85%, transparent), transparent 70%),
+              radial-gradient(70% 45% at var(--hw-bloom-x) 70%, color-mix(in oklab, var(--hw-hz) 70%, transparent), transparent 75%); }
+:is(html[data-phase="dusk"] #hero:not([data-phase]), #hero[data-phase="dusk"], html[data-phase="dawn"] #hero:not([data-phase]), #hero[data-phase="dawn"]) .hero__bloom { filter: saturate(1.35); }
 #hero .hero__ridges, #hero .hero__ridge { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 #hero .hero__ridge { overflow: visible; will-change: transform; }
-#hero .hero__ridge .r { fill: none; stroke: var(--sun); stroke-width: 1.4; vector-effect: non-scaling-stroke; stroke-linecap: round; }
-#hero .hero__ridge:nth-child(1) .f { fill: color-mix(in oklab, var(--hz) 62%, var(--mid)); }
-#hero .hero__ridge:nth-child(2) .f { fill: color-mix(in oklab, var(--mid) 72%, var(--hz)); }
-#hero .hero__ridge:nth-child(3) .f { fill: color-mix(in oklab, var(--mid) 45%, var(--top)); }
-#hero .hero__ridge:nth-child(4) .f { fill: color-mix(in oklab, var(--top) 60%, #000); }
-#hero .hero__ridge:nth-child(5) .f { fill: color-mix(in oklab, var(--top) 22%, #000); }
+#hero .hero__ridge .r { fill: none; stroke: var(--hw-sun); stroke-width: 1.4; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+#hero .hero__ridge:nth-child(1) .f { fill: color-mix(in oklab, var(--hw-hz) 62%, var(--hw-mid)); }
+#hero .hero__ridge:nth-child(2) .f { fill: color-mix(in oklab, var(--hw-mid) 72%, var(--hw-hz)); }
+#hero .hero__ridge:nth-child(3) .f { fill: color-mix(in oklab, var(--hw-mid) 45%, var(--hw-top)); }
+#hero .hero__ridge:nth-child(4) .f { fill: color-mix(in oklab, var(--hw-top) 60%, #000); }
+#hero .hero__ridge:nth-child(5) .f { fill: color-mix(in oklab, var(--hw-top) 22%, #000); }
 #hero .hero__ridge:nth-child(1) .r { opacity: .35; }
 #hero .hero__ridge:nth-child(2) .r { opacity: .5; }
 #hero .hero__ridge:nth-child(3) .r { opacity: .7; }
 #hero .hero__ridge:nth-child(4) .r { opacity: .75; }
 #hero .hero__ridge:nth-child(5) .r { opacity: .55; }
 /* haze between the far and near ranges */
-#hero .hero__ridges::after { content: ""; position: absolute; inset: 40% 0 0; background: linear-gradient(180deg, transparent, color-mix(in oklab, var(--hz) 28%, transparent) 30%, transparent 62%); mix-blend-mode: screen; }
+#hero .hero__ridges::after { content: ""; position: absolute; inset: 40% 0 0; background: linear-gradient(180deg, transparent, color-mix(in oklab, var(--hw-hz) 28%, transparent) 30%, transparent 62%); mix-blend-mode: screen; }
 
 /* the glass edge: thin bezel rim + the screen's rounded top corners, so the band reads as part of the display */
 #hero .hero__stage::after { content: ""; position: absolute; z-index: 5; inset: 0 var(--bezel); pointer-events: none;
-  border-radius: calc(18 * var(--pt, 1px)) calc(18 * var(--pt, 1px)) 0 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), 0 0 0 var(--bezel) #000; }
+  border-radius: calc(18 * var(--pt, 1px)) calc(18 * var(--pt, 1px)) 0 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), 0 0 0 var(--bezel) #000; opacity: calc(1 - var(--pull, 0)); }
 #hero .hero__fade { background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,.6) 70%, #000), radial-gradient(70% 55% at 0% 100%, rgba(0,0,0,.55), transparent 70%); }
 #hero .hero__spill { position: absolute; left: -10%; right: -10%; bottom: -45vh; height: 70vh; pointer-events: none; mix-blend-mode: screen;
   background: radial-gradient(50% 50% at 50% 50%, var(--spill, var(--wp-day-hz)), transparent 70%); opacity: .22; filter: blur(30px); }
-html[data-phase="dawn"] #hero .hero__spill { --spill: var(--wp-dawn-hz); }
-html[data-phase="dusk"] #hero .hero__spill { --spill: var(--wp-dusk-hz); }
-html[data-phase="night"] #hero .hero__spill { --spill: var(--wp-night-hz); }
+:is(html[data-phase="dawn"] #hero:not([data-phase]), #hero[data-phase="dawn"]) .hero__spill { --spill: var(--wp-dawn-hz); }
+:is(html[data-phase="dusk"] #hero:not([data-phase]), #hero[data-phase="dusk"]) .hero__spill { --spill: var(--wp-dusk-hz); }
+:is(html[data-phase="night"] #hero:not([data-phase]), #hero[data-phase="night"]) .hero__spill { --spill: var(--wp-night-hz); }
 
 /* content: bottom-left, cols 1–8 */
 #hero .hero__content { position: absolute; z-index: 3; left: 6vw; bottom: 9vh; width: min(66vw, 1040px); }
-#hero .hero__chips { color: var(--fg-2); margin-bottom: clamp(14px, 2.2vh, 24px); }
+#hero .hero__content::before { content: ""; position: absolute; z-index: -1; inset: -30% -30% -40% -12vw; pointer-events: none;
+  background: radial-gradient(80% 72% at 30% 56%, rgba(0,0,0,.85), rgba(0,0,0,.72) 50%, transparent 100%); }
+#hero :is(.hero__chips, .hero__cap, .hero__lede, .hero__toggle, .hero__note) { text-shadow: 0 1px 14px rgba(0,0,0,.7), 0 0 2px rgba(0,0,0,.6); }
+#hero .hero__chips { color: var(--fg); margin-bottom: clamp(14px, 2.2vh, 24px); }
 #hero .hero__chips [data-version] { text-transform: none; }
 #hero .hero__h1 { color: var(--fg); margin: 0; }
 #hero .hero__l { display: block; }
@@ -600,14 +623,24 @@ html[data-phase="night"] #hero .hero__spill { --spill: var(--wp-night-hz); }
 #hero .hero__word { display: inline-block; }
 #hero .hero__ch { display: inline-block; text-align: center; will-change: transform, opacity; }
 /* "notch" collapses into this black capsule, which flies up into the camera housing; the period then closes the gap */
-#hero .hero__pod { position: absolute; left: -.04em; right: -.04em; top: .24em; bottom: .08em; border-radius: 999px; background: #000;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.16), 0 .25em 1em rgba(0,0,0,.45); opacity: 0; pointer-events: none; will-change: transform, opacity; }
+/* the redaction: the privacy section's black bar, swept across "notch" at band speed; it stays. The letters then lift
+   out of it into the camera housing (hero.js). 1px rim = the notch's rim light, so black reads on near-black. */
+#hero .hero__bar { position: absolute; z-index: 1; left: -.06em; right: -.06em; top: .1em; bottom: -.02em; background: #000;
+  outline: 1px solid rgba(255,255,255,.2); outline-offset: -1px; pointer-events: none; clip-path: inset(0 100% 0 0); }
+#hero .hero__w .hero__ch, #hero .hero__word { position: relative; }
+/* concave fillets under the band, on the wallpaper itself so they ride the pull-back. Radius --hr (macOS pt) is scrubbed 0 → 14 → 20. */
+#hero .hero__fil { position: absolute; z-index: 2; top: var(--mb); width: calc(var(--hr, 0) * var(--pt)); height: calc(var(--hr, 0) * var(--pt)); pointer-events: none;
+  background: radial-gradient(circle at 100% 100%, transparent calc(var(--hr, 0) * var(--pt) - .6px), #000 calc(var(--hr, 0) * var(--pt)));
+  transform: scale(0); transform-origin: 0 0; transition: transform 500ms var(--e-fillet); }
+#hero .hero__fil--l { left: 0; }
+#hero .hero__fil--r { right: 0; transform-origin: 100% 0; background: radial-gradient(circle at 0 100%, transparent calc(var(--hr, 0) * var(--pt) - .6px), #000 calc(var(--hr, 0) * var(--pt))); }
+html.band-on #hero .hero__fil { transform: scale(1); }
 #hero .hero__dot { display: inline-block; will-change: transform; }
-#hero .hero__cap { color: var(--fg-2); margin-top: clamp(12px, 1.8vh, 20px); }
+#hero .hero__cap { color: var(--fg); margin-top: clamp(12px, 1.8vh, 20px); }
 html.js:not(.still) #hero .hero__cap { clip-path: inset(0 100% 0 0); }
 #hero .hero__lede { color: var(--fg-2); font: 480 var(--t-lede)/1.4 var(--f-text); font-variation-settings: "opsz" 24; max-width: 34ch; margin-top: clamp(18px, 3vh, 32px); text-wrap: pretty; }
 #hero .hero__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: clamp(20px, 3.4vh, 36px); }
-#hero .hero__note { color: var(--fg-3); margin-top: 14px; }
+#hero .hero__note { color: var(--fg-2); margin-top: 14px; }
 #hero .hero__toggle { display: inline-flex; align-items: center; min-height: 32px; margin: -6px 0 10px; color: var(--fg); text-decoration: underline; text-underline-offset: 4px; }
 #hero .hero__toggle[hidden] { display: none; }
 #hero a:focus-visible, #hero button:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
@@ -655,7 +688,6 @@ html.js:not(.still) #hero .hero__hint { display: block; }
 @media (max-width: 899px) {
   #hero { height: 145vh; }
   #hero .hero__stage { height: 100vh; height: 100svh; }
-  #hero .hero__wall { transform-origin: 50% 20%; }
   #hero .hero__fade { background: linear-gradient(180deg, transparent 24%, rgba(0,0,0,.6) 42%, #000 58%); }
   #hero .hero__spill { bottom: auto; top: 30svh; height: 50svh; }
   #hero .hero__ridges { transform: translateY(-22%); }
@@ -701,24 +733,25 @@ html.js:not(.still) #hero .hero__hint { display: block; }
 }
 #gone h2.gone__p { font: inherit; letter-spacing: inherit; text-transform: none; }
 
-/* the hero's hills, sinking and darkening into the bezel as the page goes black (js/gone.js scrubs them) */
-#gone .gone__land { position: absolute; z-index: 0; left: 0; top: 0; width: 100%; height: 62vh; pointer-events: none;
+/* the band: the menu bar, zoomed until its notch is the size of the copy. Dark grey over the wallpaper, the notch
+   black with a grey rim. --k (0..1, js/gone.js) darkens the bar line by line; at "black" it is #000 and the rim
+   wipes up into the bezel. Default (no JS, reduced motion) = the finished state, with the rim left as a hint. */
+#gone { --nw: min(70vw, 1000px); --bh: calc(var(--nw) * .44); --k: 1; }
+#gone .gone__band { position: absolute; z-index: 0; inset: 0 0 auto; height: var(--bh); pointer-events: none;
+  background: color-mix(in oklab, var(--gone-hill, var(--wp-dusk-mid)) 10%, #1b1b1e);
+  box-shadow: inset 0 0 0 100vmax rgb(0 0 0 / var(--k)), 0 1px 0 rgb(255 255 255 / calc(.1 * (1 - var(--k)))); }
+#gone .gone__notch { position: absolute; left: 50%; top: 0; width: var(--nw); height: var(--bh); translate: -50% 0; overflow: visible; }
+#gone .gone__fill { fill: #000; }
+#gone .gone__rim { fill: none; stroke: rgb(255 255 255 / .34); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+#gone .gone__lens { fill: #07080d; stroke: rgb(140 160 220 / .22); stroke-width: 1; vector-effect: non-scaling-stroke; }
+#gone .gone__rim, #gone .gone__lens { opacity: .3; }
+/* the hero's hills: the wallpaper under the bar, sinking away as the section slides up (js/gone.js scrubs them) */
+#gone .gone__land { position: absolute; z-index: 0; left: 0; top: var(--bh); width: 100%; height: 50vh; pointer-events: none;
   fill: var(--gone-hill, var(--wp-dusk-mid)); transform-origin: 50% 0;
   -webkit-mask: linear-gradient(180deg, #000 30%, transparent); mask: linear-gradient(180deg, #000 30%, transparent); }
 html[data-phase="dawn"] #gone { --gone-hill: var(--wp-dawn-mid); }
 html[data-phase="day"] #gone { --gone-hill: var(--wp-day-mid); }
 html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
-/* the camera housing, huge, black on black: only its 1px rim shows, and it dissolves as the copy inks */
-#gone .gone__housing { position: absolute; z-index: 0; left: 50%; top: 0; width: min(64vw, 920px); height: clamp(90px, 20vh, 210px);
-  translate: -50% 0; overflow: visible; pointer-events: none; opacity: .9; }
-#gone .gone__housing path { fill: #000; stroke: rgb(255 255 255 / .16); stroke-width: 1; vector-effect: non-scaling-stroke; }
-/* the light leak: a wash from the menu bar down to the beam, and the beam itself (1px rim of light) */
-#gone .gone__leak, #gone .gone__beam { display: none; }
-#gone.is-live .gone__leak { display: block; position: absolute; z-index: 1; inset: 0; transform-origin: 50% 0; transform: scaleY(0); pointer-events: none;
-  background: radial-gradient(60% 100% at 50% 100%, rgb(255 236 214 / .085), transparent 70%), linear-gradient(180deg, rgb(255 236 214 / .015), rgb(255 236 214 / .05)); }
-#gone.is-live .gone__beam { display: block; position: absolute; z-index: 1; left: 0; right: 0; top: 0; height: 1px; pointer-events: none; opacity: 0;
-  background: linear-gradient(90deg, transparent, rgb(255 244 230 / .55) 30%, rgb(255 255 255 / .9) 50%, rgb(255 244 230 / .55) 70%, transparent);
-  box-shadow: 0 0 18px 2px rgb(255 236 214 / .28), 0 0 60px 8px rgb(255 236 214 / .07); }
 #gone .gone__copy { color: var(--fg); text-wrap: pretty; }
 #gone .gone__p { margin: 0; }
 #gone .gone__p + .gone__p { margin-top: .5em; }
@@ -760,6 +793,7 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
   #gone .gone__p > .gone__link:hover::after { clip-path: inset(0 0 0 0 round .18em); transition-duration: .35s; }
 }
 /* keyboard: focusing the link inks its line at once and rings the visible copy */
+#gone .ln:has(.gone__link:focus-visible), #gone .gone__p:has(> .gone__link:focus-visible) { color: var(--fg); }
 #gone .ln:has(.gone__link:focus-visible) > .bandtext { clip-path: none; visibility: visible; }
 #gone .ln:has(.gone__link:focus-visible) > .bandtext .gone__link,
 #gone .gone__p > .gone__link:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 3px; }
@@ -770,8 +804,8 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
 @media (max-width: 899px) {
   #gone { height: 115vh; }
   #gone .gone__stage { padding-top: calc(var(--mb) + clamp(40px, 11vh, 96px)); }
-  #gone .gone__housing { width: 78vw; height: 13vh; }
-  #gone .gone__land { height: 44vh; }
+  #gone { --nw: 92vw; }
+  #gone .gone__land { height: 40vh; }
   #gone .gone__col { grid-column: 1 / -1; }
   #gone .gone__copy { font-size: clamp(1.9rem, 8vw, 2.6rem); }
 }
@@ -779,7 +813,6 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
   #gone { height: auto; }
   #gone .gone__stage { position: relative; height: auto; padding-block: var(--sec-pad); }
   #gone .gone__land { opacity: .35; }
-  #gone .gone__housing { opacity: .5; }
 }
 
 /* ---- css/try.css */
@@ -811,18 +844,33 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
 #try .try__popwrap { position: relative; transform: scale(var(--pop-k, 1)); transform-origin: 0 0; }
 #try .try__pop { transform-origin: var(--wire-x, 24px) 0; }
 
-/* "your turn": a soft pulse ring on the switch after the demo flip */
+/* "your turn": a pulse ring on the switch once the mirror opens. The ring animates transform/opacity only, and only
+   while the window is handed over (.is-turn) AND #try is on screen (.is-vis, lib.whenVisible): zero work elsewhere. */
 #try .try__turn { position: absolute; inset: 0; border-radius: 12px; pointer-events: none; opacity: 0; transition: opacity .5s var(--e-out);
   box-shadow: 0 0 0 2px var(--blue); }
-#try .try__turn::before { content: ""; position: absolute; inset: 0; border-radius: inherit; animation: try-ring 1.8s var(--e-out) infinite; }
-#try .try__turn b { position: absolute; right: calc(100% + 12px); top: 50%; transform: translateY(-50%); font: 500 10px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--blue); white-space: nowrap; }
+#try .try__turn::before { content: ""; position: absolute; inset: 0; border-radius: inherit; border: 2px solid var(--blue); opacity: 0; }
+#try.is-vis .is-turn .try__turn::before { animation: try-ring 1.8s var(--e-out) infinite; }
+#try .try__turn b { position: absolute; right: calc(100% + 12px); top: 50%; transform: translateY(-50%); font: 600 11px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: #0060DF; white-space: nowrap; }
+#try .nt-pop[data-appearance="dark"] .try__turn b { color: #4DA3FF; }
 #try .is-turn .try__turn { opacity: 1; }
-@keyframes try-ring { 0% { box-shadow: 0 0 0 0 rgba(17,125,255,.6); } 75%, 100% { box-shadow: 0 0 0 14px rgba(17,125,255,0); } }
+@keyframes try-ring { 0% { transform: scale(1); opacity: .6; } 75%, 100% { transform: scale(1.6); opacity: 0; } }
 
-/* foot: live plate (left) and the window's DARK | LIGHT (right) */
-#try .try__foot { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; margin-top: 18px; }
-#try .try__plate { margin: 0; min-width: 0; color: var(--fg-3); letter-spacing: .06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#try .try__plate span { color: var(--fg-2); }
+/* the menu-bar window, site-level a11y: a solid focus ring (3:1 on both looks, gapped from the blue switch track),
+   AA secondary text in the Light look */
+#try .nt-pop :focus-visible, #try .nt-pop .nt-pop__switch:focus-visible, #try .nt-pop .nt-pop__chk input:focus-visible + .nt-pop__box {
+  box-shadow: 0 0 0 1px var(--pop-gap, #fff), 0 0 0 4px #0A84FF; }
+#try .nt-pop[data-appearance="dark"] { --pop-gap: #1E1E1E; }
+#try .nt-pop[data-appearance="light"] { --tx2: rgba(0,0,0,.62); }
+
+/* live readout, set large in the head column: label | value rows */
+#try .try__plate { display: grid; grid-template-columns: auto 1fr; gap: 6px 20px; margin: clamp(28px, 4vh, 44px) 0 0; padding-top: 16px; border-top: 1px solid var(--line, rgba(255,255,255,.12)); }
+#try .try__plate > div { display: contents; }
+#try .try__plate dt { align-self: baseline; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-3); }
+#try .try__plate dd { align-self: baseline; margin: 0; min-width: 0; font-size: clamp(15px, 1.4vw, 20px); line-height: 1.35; letter-spacing: .04em; color: var(--fg-2); white-space: nowrap; }
+#try .try__plate dd.is-on { color: var(--fg); }
+
+/* foot: the window's DARK | LIGHT, under the window */
+#try .try__foot { display: flex; align-items: center; justify-content: flex-end; gap: 12px 24px; flex-wrap: wrap; margin-top: 18px; }
 #try .try__look { display: flex; align-items: center; gap: 10px; color: var(--fg-3); letter-spacing: .08em; }
 #try .try__look button { all: unset; cursor: pointer; padding: 10px 2px; min-height: 24px; text-transform: uppercase; color: var(--fg-3); transition: color .16s; position: relative; }
 #try .try__look button[aria-checked="true"] { color: var(--fg); }
@@ -841,6 +889,12 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
   #try .try__mirror .nt-glass { aspect-ratio: 16 / 10.5; }
   #try .try__mirror .nt-glass--main { flex: 0 0 73%; }
   #try .try__mirror .nt-glass--ext { flex: 0 0 24%; aspect-ratio: 16 / 10; }
+  /* a desk: both displays stand on one hairline, a cable sagging between them (behind the glass) */
+  #try .try__mirror::after { content: ""; position: absolute; left: -3%; right: -3%; top: 100%; height: 1px; pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.2) 10%, rgba(255,255,255,.2) 90%, transparent); }
+  #try .try__mirror::before { content: ""; position: absolute; left: 21%; width: 9%; top: calc(100% - 12px); height: 20px; pointer-events: none;
+    border: 1.5px solid rgba(255,255,255,.22); border-top: 0; border-radius: 0 0 50% 50% / 0 0 100% 100%; }
+  #try .try__mirror:not(:has(.nt-multi))::before { display: none; }
 }
 
 /* ---- one composed frame: head over the external display, the window inside the built-in screen ---- */
@@ -870,17 +924,20 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
   #try .try__note { display: block; }
   #try .try__right { position: relative; top: auto; left: auto; width: auto; margin-top: 40px; }
   #try .try__wire { display: none; }
-  #try .try__popwrap { width: min(340px, 100%); min-height: 0; margin-inline: auto; aspect-ratio: 340 / 608; transform: none; }   /* min-height:0 or the box grows to the unscaled content */
+  #try .try__popwrap { width: min(340px, 100%); min-height: 0; margin-inline: auto; aspect-ratio: 340 / 695; transform: none; }   /* = the window with its touch-sized rows (try.css below) */   /* min-height:0 or the box grows to the unscaled content */
   #try .try__pop { width: 340px; transform: scale(var(--pop-s, 1)); transform-origin: 0 0; }
-  #try .try__foot { flex-direction: column; justify-content: center; margin-top: 24px; }
-  #try .try__plate { white-space: normal; text-align: center; }
+  #try .try__foot { justify-content: center; margin-top: 24px; }
 }
 
-/* touch: whole checkbox rows become 44 px targets; controls keep their 1:1 macOS look (component.css adds the ::after pads) */
-@media (pointer: coarse) and (max-width: 899px) {
-  #try .nt-pop__chk { align-self: stretch; min-height: 44px; }
-  #try .nt-pop__chk::after { inset: 0 -4px; }
-  #try .try__popwrap { aspect-ratio: 340 / 767; }
+/* touch / phones: the window keeps its macOS look but every control gets a >= 24 px (scaled) target:
+   whole checkbox rows, a taller segmented control, invisible pads around the switch and buttons */
+@media (pointer: coarse), (max-width: 899px) {
+  #try .nt-pop button, #try .nt-pop__chk { position: relative; }
+  #try .nt-pop__switch::after, #try .nt-pop__btn::after { content: ""; position: absolute; inset: -10px -4px; }
+  #try .nt-pop__seg button::after { content: ""; position: absolute; inset: -8px 0; }
+  #try .nt-pop__seg { height: 30px; }
+  #try .nt-pop__chk { align-self: stretch; min-height: 32px; }
+  #try .nt-pop__chk::after { content: ""; position: absolute; inset: 0 -4px; }
 }
 
 /* reduced */
@@ -923,7 +980,9 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
 #features .feat__rail button.is-on { color: #fff; background: #000; box-shadow: inset 0 0 0 1px var(--line-2), 0 1px 0 var(--rim) inset; }
 #features .feat__rail button.is-on i { height: 28px; opacity: 1; background: var(--fx-focus); }
 #features .feat__view { position: relative; height: 100%; overflow: clip; border-radius: 28px; background: radial-gradient(120% 90% at 50% 0%, var(--ink-2), #000 70%); box-shadow: inset 0 0 0 1px var(--line); isolation: isolate; }
-#features .feat__spill { position: absolute; inset: 18% 6% 10%; z-index: 0; overflow: hidden; border-radius: 40%; filter: blur(60px) saturate(1.3); opacity: .4; transform: scale(1.15); pointer-events: none; }
+/* a colour wash from the stage's hour: one gradient, no blur (features.js writes --sa/--sb) */
+#features .feat__spill { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .55; --sa: #FF9C5B; --sb: #C05479;
+  background: radial-gradient(60% 42% at 50% 58%, var(--sa) 0%, color-mix(in srgb, var(--sb) 55%, transparent) 38%, transparent 72%); transition: opacity var(--d-ui); }
 #features .feat__tilt { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; padding: 0 4%; transform: perspective(1600px) rotateX(6deg); transform-origin: 50% 40%;
   -webkit-mask-image: linear-gradient(#000 74%, transparent 96%); mask-image: linear-gradient(#000 74%, transparent 96%); }
 #features .feat__cam { position: relative; width: 100%; transform-origin: 0 0; will-change: transform; }
@@ -950,14 +1009,25 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
 #features .feat__chip i { width: 14px; height: 14px; border-radius: 4px; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.6); transition: background-color var(--d-micro), box-shadow var(--d-micro); }
 #features .feat__chip.is-checked i { background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3.5 7.2 6 9.6l4.6-5' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat; box-shadow: none; }
 
+/* 04/05 deck: our own pictures dealt between the wallpaper and the menu bar, so the band never moves */
+#features .fx-deck { position: absolute; inset: 0; z-index: 1; display: none; background: #050507; pointer-events: none; }
+#features .is-deck .fx-deck { display: block; }
+#features .fx-card { transform-origin: 50% 100%; will-change: transform; backface-visibility: hidden; }
+#features .fx-card.is-moving { border-radius: 3%; box-shadow: 0 1.5em 3em rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.14); }
+/* 06: the band lifts off the top edge as one piece */
+#features .nt-glass--main > .nt-band { transform: translate3d(0, calc(var(--lift, 0) * -100%), 0); }
+#features .nt-glass--main > .nt-fil { translate: 0 calc(var(--lift, 0) * -1 * var(--nt-mb)); }
+
 /* overlays inside the product glass (they inherit --pt and --r) */
-#features .fx-dim { position: absolute; z-index: 6; left: 0; top: var(--nt-mb); width: calc(var(--r) * var(--pt)); height: calc(var(--r) * var(--pt)); opacity: 0; pointer-events: none; --k: 1; }
-#features .fx-dim svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: none; stroke: var(--fx-focus); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
-#features .fx-dim path { vector-effect: non-scaling-stroke; }
-#features .fx-dim__arc, #features .fx-dim__r { stroke-dasharray: 1; stroke-dashoffset: var(--k); }
-#features .fx-dim__r { stroke-width: .8; opacity: .8; }
-#features .fx-dim__t { stroke-width: .8; }
-#features .fx-dim b { position: absolute; left: 112%; top: 100%; font: 600 4px/1 var(--f-mono); letter-spacing: .04em; color: var(--fx-focus); white-space: nowrap; transform: translateY(-50%); }
+#features .fx-macro { position: absolute; z-index: 9; inset: 0; opacity: 0; transform-origin: 0 12%; pointer-events: none; --k: 1; }
+#features .fx-macro svg { display: block; width: 100%; height: 100%; }
+#features .fx-macro__blk { fill: #000; }
+#features .fx-macro > svg > text { fill: #fff; font: 700 46px/1 var(--f-text); letter-spacing: -.01em; }
+#features .fx-macro__arc, #features .fx-macro__r { fill: none; stroke: var(--fx-focus); stroke-dasharray: 1; stroke-dashoffset: var(--k); stroke-linecap: round; }
+#features .fx-macro__arc { stroke-width: 3; }
+#features .fx-macro__r { stroke-width: 1.5; opacity: .8; }
+#features .fx-macro__lbl rect { fill: rgba(0,0,0,.84); stroke: rgba(255,255,255,.22); }
+#features .fx-macro__lbl text { fill: #fff; font: 600 14px/1 var(--f-mono); letter-spacing: .06em; }
 #features .fx-ring { position: absolute; left: 50%; top: 50%; width: 260%; height: auto; aspect-ratio: 1; transform: translate(-50%, -50%) rotate(-90deg); fill: none; stroke: var(--fx-focus); stroke-width: 2.4; opacity: 0;
   stroke-dasharray: 1; stroke-dashoffset: var(--k, 1); overflow: visible; pointer-events: none; transition: opacity var(--d-micro); }
 
@@ -1016,7 +1086,7 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
 
 /* ---- css/how.css */
 /* #how (SPEC §5.5): "It's just a picture." Exploded view of the four layers. Every rule scoped under #how. */
-#how { --o: 0; --sep: 0; --rim: 1; --push: 0; --knob: cubic-bezier(.3,1.3,.5,1); background: var(--black); color: var(--fg); }
+#how { --o: 0; --sep: 0; --bake: 0; --rim: 1; --push: 0; --knob: cubic-bezier(.3,1.3,.5,1); background: var(--black); color: var(--fg); }
 
 /* ---------------------------------------------------------------- copy column */
 #how .how__title { margin: 0 0 clamp(28px, 4.5vh, 48px); max-width: 9ch; }
@@ -1039,20 +1109,19 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
 #how .how__plane--copy .how__face { overflow: visible; }
 #how .how__plane--copy .how__face::after { content: ""; position: absolute; inset: -7px; border: 1px dashed var(--line-2); border-radius: calc(1.4cqw + 7px); pointer-events: none; opacity: calc(.15 + var(--sep) * .85); }
 #how .how__plane--copy .how__wp { border-radius: inherit; overflow: hidden; }
-/* the strip lives on a transparent sheet: faint checker reads as "nothing here but the band" */
-/* the strip lives on a clear sheet: just an edge, so the black bar is the only thing on it */
-#how .how__plane--strip .how__face { background: linear-gradient(rgba(118,169,255,.2), rgba(118,169,255,.05) 55%, rgba(118,169,255,.02)); }
 
 #how .how__slab { position: absolute; z-index: 2; inset: 0 0 auto; height: calc(37 * var(--p)); }
-#how .how__band { position: absolute; inset: 0; background: #000; }
+#how .how__band { position: absolute; inset: 0; background: #000; display: flex; align-items: center; justify-content: flex-end; padding-right: calc(150 * var(--p)); }
+/* a height bracket + label on the band itself: what it measures, never a number */
+#how .how__dim { position: relative; display: flex; align-items: center; height: 100%; padding-left: max(7px, calc(12 * var(--p)));
+  font: 500 max(7.5px, calc(12 * var(--p)))/1 var(--f-mono); font-stretch: 87.5%; letter-spacing: .08em; text-transform: uppercase; color: #fff; white-space: nowrap; }
+#how .how__dim::before { content: ""; position: absolute; left: 0; top: 14%; bottom: 14%; width: max(4px, calc(6 * var(--p))); border: 1px solid rgba(255,255,255,.75); border-right: 0; }
+/* the bake: one white frame as the band lands */
+#how .how__flash { position: absolute; z-index: 7; inset: 0; border-radius: inherit; background: #fff; opacity: 0; pointer-events: none; }
 #how .how__fil { position: absolute; top: 100%; width: calc(14 * var(--p)); height: calc(14 * var(--p)); }
 #how .how__fil--l { left: 0; background: radial-gradient(circle calc(14 * var(--p)) at 100% 100%, transparent 98%, #000 100%); }
 #how .how__fil--r { right: 0; background: radial-gradient(circle calc(14 * var(--p)) at 0 100%, transparent 98%, #000 100%); }
-/* rim light: the slab catches the copy's light from below */
-#how .how__plane--strip .how__band { box-shadow: 0 0 0 1px rgba(255,255,255,.7), 0 0 calc(30 * var(--p)) calc(4 * var(--p)) rgba(118,169,255,.65); }
 #how .how__plane--strip .how__face::after { content: ""; position: absolute; z-index: 5; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); pointer-events: none; }
-#how .how__plane--strip .how__fil { filter: drop-shadow(0 0 calc(6 * var(--p)) rgba(140,190,255,.95)) drop-shadow(0 0 1px rgba(255,255,255,.9)); }
-#how .how__plane--strip .how__spill { opacity: var(--sep); background: radial-gradient(90% 38% at 50% 0%, rgba(118,169,255,.55), rgba(107,227,208,.1) 60%, transparent 80%); }
 
 #how .how__menu { position: absolute; z-index: 3; inset: 0 0 auto; height: calc(37 * var(--p)); display: flex; align-items: center; justify-content: space-between;
   padding-inline: calc(22 * var(--p)); font: 500 calc(13 * var(--p))/1 var(--f-mac); word-spacing: calc(11 * var(--p)); color: #fff; white-space: nowrap; }
@@ -1066,13 +1135,10 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
 
 #how .how__spill { position: absolute; z-index: 1; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: calc(var(--sep) * .8);
   background: radial-gradient(120% 75% at 50% 115%, rgba(118,169,255,.6), rgba(107,227,208,.12) 55%, transparent 75%); }
-#how .how__plane--desk .how__spill { opacity: calc(var(--sep) * .45); }
-/* Spread: the desk plane sits over the strip's band edge; its picture thins to a ghost so the black strip below reads. */
-#how .how__plane--desk .how__wp { opacity: calc(1 - var(--sep) * .9); }
 
 /* ---------------------------------------------------------------- desk: sticky exploded view */
 @media (min-width: 900px) and (prefers-reduced-motion: no-preference) {
-  #how { height: 180vh; }
+  #how { height: 220vh; }
   #how .how__stage { position: sticky; top: 0; height: 100vh; display: flex; align-items: center; overflow: clip; }
   #how .how__copy { grid-column: 1 / span 5; position: relative; z-index: 2; }
   #how .how__view { grid-column: 6 / -1; position: relative; height: min(88vh, 820px); }
@@ -1086,7 +1152,22 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
     transition: translate .55s var(--knob); }
   #how .how__plane:focus-visible, #how .how__plane[aria-pressed="true"] { --lift: 1; }
   @media (hover: hover) and (pointer: fine) { #how .how__plane:hover { --lift: 1; } }
+  /* the strip falls onto the copy (--bake 0→1) before the rest of the stack folds */
+  #how .how__plane.how__plane--strip { transform: translateZ(calc(var(--sep) * (2 - var(--bake)) * 120px + 1.2px)); }
   #how.is-live .how__rig, #how.is-live .how__plane { will-change: transform; }
+
+  /* strip: nothing but an opaque black band on a clear sheet, rim-lit by the copy below; the rim goes out as it's baked in */
+  #how .how__plane--strip .how__wp { display: none; }
+  /* once baked, a faint seam stays so the band still reads on the copy (black on a black page) until the desk plane covers it */
+  #how .how__plane--strip { --seam: calc(1 - var(--bake) * .7); }
+  #how .how__plane--strip .how__band { box-shadow: 0 0 0 1px rgb(255 255 255 / calc(.8 * var(--seam))), 0 0 calc(34 * var(--p)) calc(5 * var(--p)) rgb(118 169 255 / calc(.7 * (1 - var(--bake)))); }
+  #how .how__plane--strip .how__fil { filter: drop-shadow(0 0 calc(6 * var(--p)) rgb(140 190 255 / calc(.95 * (1 - var(--bake))))) drop-shadow(0 0 1px rgb(255 255 255 / calc(.9 * var(--seam)))); }
+  #how .how__plane--strip .how__face::after { opacity: calc(1 - var(--bake)); }
+  #how .how__plane--strip .how__dim { opacity: calc(1 - var(--bake)); }
+  #how .how__plane--strip .how__spill { opacity: calc(var(--sep) * (1 - var(--bake))); background: radial-gradient(90% 42% at 50% 0%, rgba(118,169,255,.6), rgba(107,227,208,.12) 60%, transparent 80%); }
+  /* desk: while spread it's the screen alone (menu text + notch on glass); the composite fills in as the stack folds */
+  #how .how__plane--desk .how__wp, #how .how__plane--desk .how__slab { opacity: calc(1 - var(--sep)); }
+  #how .how__plane--desk .how__spill { display: none; }
   #how .how__glow { position: absolute; inset: -30% -25%; transform: translateZ(-90px); border-radius: 50%; pointer-events: none; opacity: var(--sep);
     background: radial-gradient(closest-side, rgba(59,113,254,.42), rgba(107,227,208,.1) 62%, transparent); }
 
@@ -1126,8 +1207,8 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
   #how .how__step:nth-child(1) { order: 2; }  #how .how__tag:nth-child(1) { order: 3; }  #how .how__plane--orig  { order: 4; }
   #how .how__tag:nth-child(2) { order: 5; }   #how .how__plane--copy  { order: 6; }
   #how .how__step:nth-child(2) { order: 7; }  #how .how__tag:nth-child(3) { order: 8; }  #how .how__plane--strip { order: 9; }
-  #how .how__step:nth-child(3) { order: 10; } #how .how__tag:nth-child(4) { order: 11; } #how .how__plane--desk  { order: 12; }
-  #how .how__step:nth-child(4) { order: 13; }
+  #how .how__step:nth-child(3) { order: 10; } #how .how__step:nth-child(4) { order: 11; }
+  #how .how__tag:nth-child(4) { order: 12; } #how .how__plane--desk  { order: 13; }
   #how .how__stamp { order: 14; align-self: flex-start; margin: 22px 0 0 30px; max-width: calc(100% - 30px); white-space: normal; line-height: 1.4; }
   #how .how__foot { order: 15; margin: 40px 0 0 30px; }
 
@@ -1143,7 +1224,8 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
   #how .how__grid::before { content: ""; position: absolute; z-index: 0; left: calc(var(--margin) + 3px); top: var(--l0, 0); height: var(--lh, 0); width: 1px;
     background: linear-gradient(var(--fg-3), var(--line-2)); transform-origin: 0 0; transform: scaleY(var(--draw, 1)); }
   #how { --sep: .6; }
-  #how .how__plane--desk .how__wp { opacity: 1; }
+  /* 02's card is the bake itself: the copy, with the band dropped onto it (JS scrubs the drop) */
+  #how .how__plane--strip .how__spill { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { #how { --rim: 0; } }
 @media (prefers-reduced-motion: reduce) {
@@ -1153,19 +1235,26 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
 }
 
 /* ---- css/privacy.css */
-/* #privacy (SPEC §5.6): paper interlude. Black strip + concave fillets in, statements swept into menu bars. */
+/* #privacy (SPEC §5.6): the paper is a screen under the page's black. Its top edge is the band: the notch hangs
+   first, spreads into the menu bar, then the concave fillets click in. Each statement is a full-width menu bar. */
 #privacy {
   --rmax: clamp(40px, 8vw, 120px);
-  --pv-gap: clamp(28px, 5vw, 72px);   /* paper above the band: the band is a figure on paper, not part of the black above */
+  --pv-pad-x: clamp(12px, 1.4vw, 20px);   /* = #faq --pad-x: the same menu-bar inset as the FAQ sweeps */
   position: relative; overflow: clip;
-  padding-top: calc(var(--pv-gap) + var(--mb));
+  padding-top: var(--mb);
 }
 @media (max-width: 899px) { #privacy { --rmax: 48px; } }
 
 /* ---- band + concave fillets, as WallpaperRenderer bakes them: black quarter-circle fillets hang into the paper
    under each end of the band. Radius steps 0 → 10 → 14 → 20 pt (Small / Medium / Large) as the label changes.
    Fillets are drawn at --rmax (= 20 pt) and scaled (transform only) to the live radius. */
-#privacy .pv__strip { position: absolute; left: 0; right: 0; top: var(--pv-gap); height: var(--mb); z-index: 1; }
+#privacy .pv__strip { position: absolute; left: 0; right: 0; top: 0; height: var(--mb); z-index: 1; }
+/* The camera notch hangs from the black above; the band grows out of it (scaleX from centre) and swallows it. */
+#privacy .pv__notch {
+  position: absolute; top: 0; left: 50%; width: var(--notch-w); height: calc(var(--mb) - 2px);   /* tucked inside the band: no seam once it's swallowed */
+  margin-left: calc(var(--notch-w) / -2); background: #000;
+  border-radius: 0 0 calc(10 * var(--pt)) calc(10 * var(--pt));
+}
 #privacy .pv__strip::before {
   content: ""; position: absolute; inset: 0; background: #000;
   transform: scaleX(var(--pv-x, 1)); will-change: transform;
@@ -1185,13 +1274,18 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
 #privacy .pv__rv { font-weight: inherit; color: #000; }
 
 /* ---- body */
-#privacy .pv__body { padding-block: calc(var(--sec-pad) + var(--rmax) * .4) var(--sec-pad); }
+#privacy .pv__body { padding-block: calc(var(--sec-pad) + var(--rmax) * .4) clamp(16px, 3vw, 48px); }   /* #faq's own top pad follows on the same paper */
 #privacy .pv__eyebrow { color: var(--on-paper-2); margin-bottom: clamp(20px, 3vw, 40px); }
-#privacy .pv__list { margin: 0; font: inherit; }
+#privacy .pv__list { margin: 0; font: inherit; display: grid; gap: clamp(4px, .6vw, 10px); }   /* stacked menu bars, not one slab */
 #privacy .pv__row {
   position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--gutter);
-  padding-block: clamp(10px, 1.4vw, 22px);
+  padding: clamp(10px, 1.4vw, 22px) var(--pv-pad-x);
 }
+/* The bar is the whole row: statement left, a mono status item right, like a menu bar. */
+#privacy .pv__row > .bandtext { display: flex; align-items: center; justify-content: space-between; gap: inherit; }
+#privacy .pv__row > .bandtext .pv__st, #privacy .pv__row > .bandtext .pv__meta b { color: #fff; }
+#privacy .pv__row > .bandtext .pv__meta { color: rgba(255,255,255,.62); }
+#privacy .pv__row > .bandtext .pv__rule { display: none; }
 #privacy .pv__row:first-child { border-top: 1px solid var(--paper-line); }
 #privacy .pv__rule {
   position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--paper-line);
@@ -1200,9 +1294,7 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
 #privacy .pv__st {
   display: inline-block; white-space: nowrap; color: #000;
   font: 800 var(--t-statement)/.92 var(--f-display); letter-spacing: -.04em; font-variation-settings: "opsz" 96;
-  padding: .06em .14em .1em;   /* the bar breathes like a menu bar and starts on col 1 */
 }
-#privacy .pv__st .bandtext { color: var(--paper); }
 #privacy .pv__meta {
   flex: none; font-size: 11px; letter-spacing: .06em; color: var(--on-paper-2);
   text-transform: uppercase; align-self: flex-end; padding-bottom: .4em;
@@ -1233,8 +1325,10 @@ html[data-phase="night"] #gone { --gone-hill: var(--wp-night-mid); }
 @media (max-width: 419px) { #privacy .pv__st--long { font-variation-settings: "opsz" 96, "wdth" 78; } }
 
 /* Reduced / no-JS end state: final black bars, fillets at max. */
-html.still #privacy .pv__st, html:not(.js) #privacy .pv__st { background: #000; color: var(--paper); }
-html.still #privacy .pv__st .bandtext { display: none; }
+html.still #privacy .pv__row, html:not(.js) #privacy .pv__row { background: #000; }
+html.still #privacy .pv__st, html:not(.js) #privacy .pv__st, html.still #privacy .pv__meta b, html:not(.js) #privacy .pv__meta b { color: #fff; }
+html.still #privacy .pv__meta, html:not(.js) #privacy .pv__meta { color: rgba(255,255,255,.62); }
+html.still #privacy .pv__row > .bandtext { display: none; }
 
 /* ---- css/faq.css */
 /* #faq (SPEC §5.7): "Fair questions." on paper. Opening a row sweeps a black menu bar in from the
@@ -1328,85 +1422,79 @@ html.still #privacy .pv__st .bandtext { display: none; }
   #faq .faq__row[open]::details-content { block-size: auto; }
 }
 
-/* entrance: the first row's bar waits (open, no layout change) until the list has risen */
+/* entrance (JS stages it only when the list is below the fold; no fades, no layout change).
+   Row 1 holds its bar, then sweeps it in and keeps it; its answer is at full ink throughout.
+   Rows 2+ get a menu highlight running down the list: the bar crosses each empty row (--bx 0→1 from
+   the left), the question appears underneath (black on black, unseen), and the bar leaves to the right,
+   uncovering it at full ink. */
 #faq .faq__row.is-pre > summary::before { transform: scaleX(0); }
 #faq .faq__row.is-pre .faq__ink { clip-path: inset(0 100% 0 0); }
 #faq .faq__row.is-pre .faq__mk { transform: none; fill: transparent; stroke: #000; }
 #faq .faq__row.is-pre > summary::after { transform: scaleY(0); }
-#faq .faq__row.is-pre .faq__a { opacity: 0; transform: translateY(-10px); }
+#faq .faq__list .faq__row.is-wipe > summary::before { transform: scaleX(var(--bx, 0)); transform-origin: left; transition: none; }
+#faq .faq__list .faq__row.is-wipe.is-lit > summary::before { transform-origin: right; }
+#faq .faq__row.is-wipe:not(.is-lit) :is(.faq__q, .faq__mk) { opacity: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   #faq *, #faq *::before, #faq *::after, #faq .faq__row::details-content { transition: none !important; }
 }
 
 /* ---- css/download.css */
-/* #download (SPEC §5.8): the band takes the page. Scope every rule under #download.
-   Default (no JS / reduced / section JS failed) = the end state on black. html.js:not(.still) adds the
-   160vh sticky track; .is-live (set by download.js) adds the paper ground + growing strip. */
-#download { background: #000; color: var(--fg); }
+/* #download (SPEC §5.8): the finale bookends the hero. A 100vh poster: the night hills wallpaper, the black band
+   dropped down to hold the wordmark (the letters pour out of the notch), the CTA hanging from the band like the
+   download sheet, and the small print on the wallpaper. Scope every rule under #download.
+   Default (no JS / reduced / section JS failed) = the finished poster. download.js scrubs it with transforms only. */
+#download { background: var(--wp-night-top); color: var(--fg); }
 
 #download .dl__stage {
-  position: relative; display: grid; place-items: center;
-  min-height: 100vh; min-height: 100svh; padding-block: calc(var(--mb) + 48px) 64px;
-  overflow: hidden;
+  --F: calc(20 * var(--pt));                       /* the fillets: Large, 20 pt */
+  position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: center;
+  min-height: 100vh; min-height: 100svh; overflow: hidden;
 }
-#download .dl__in { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
+#download .dl__wp { position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, var(--wp-night-top), var(--wp-night-mid) 52%, var(--wp-night-hz)); }
 
-/* ---- the strip + fillets (only drawn while live) */
-#download .dl__ink { display: none; }
-#download.is-live { background: var(--paper); }
-#download.is-live .dl__ink { display: block; position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-#download .dl__strip {
-  position: absolute; inset: 0 0 auto; height: var(--mb); background: #000;
-  transform-origin: 50% 0; will-change: transform;
+/* ---- the band: black, from the top edge down past the wordmark; concave fillets at both ends */
+#download .dl__band {
+  position: relative; z-index: 2; width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: calc(var(--mb) + clamp(26px, 6vh, 64px)) 16px clamp(26px, 4.4vh, 46px);
 }
-#download .dl__fil {
-  --f: calc(20 * var(--pt));                       /* max fillet (Large, 20 pt); scale brings it down to --r-site */
-  position: absolute; top: 0; width: var(--f); height: var(--f); will-change: transform;
-}
-#download .dl__fil--l { left: 0; transform-origin: 0 0; background: radial-gradient(circle at 100% 100%, transparent calc(var(--f) - .6px), #000 var(--f)); }
-#download .dl__fil--r { right: 0; transform-origin: 100% 0; background: radial-gradient(circle at 0 100%, transparent calc(var(--f) - .6px), #000 var(--f)); }
+#download .dl__ink { position: absolute; inset: 0; z-index: -1; background: #000; transform-origin: 50% 0; }
+#download .dl__fil, #download .dl__tfil { position: absolute; top: 100%; width: var(--F); height: var(--F); pointer-events: none; }
+#download .dl__fil--l, #download .dl__tfil--r { left: 0; transform-origin: 0 0; background: radial-gradient(circle at 100% 100%, transparent calc(var(--F) - .6px), #000 var(--F)); }
+#download .dl__fil--r, #download .dl__tfil--l { right: 0; transform-origin: 100% 0; background: radial-gradient(circle at 0 100%, transparent calc(var(--F) - .6px), #000 var(--F)); }
+#download .dl__tfil--l { right: 100%; top: 0; }
+#download .dl__tfil--r { left: 100%; top: 0; }
 
-/* ---- type */
-#download .dl__eye { margin-bottom: clamp(14px, 2.6vh, 28px); }
+/* the notch, drawn exactly like the nav's so the two coincide when the stage pins */
+#download .dl__notch { position: absolute; top: 0; left: 50%; width: calc(191 * var(--pt)); height: var(--notch-h); translate: -50% 0; pointer-events: none; }
+#download .dl__notch svg { display: block; width: 100%; height: 100%; overflow: visible; }
+#download .dl__notch .rim { fill: none; stroke: rgba(255,255,255,.14); stroke-width: 1; vector-effect: non-scaling-stroke; }
+
+/* ---- type in the band */
+#download .dl__eye { margin-bottom: clamp(12px, 2.4vh, 26px); }
 #download .dl__word {
-  --cap-top: .1em; --cap-h: .7em;                  /* measured by download.js; these are close fallbacks */
-  position: relative; margin: 0;
-  font: 800 min(var(--t-mega), 15.5vw)/.8 var(--f-display);
+  margin: 0; font: 800 min(var(--t-mega), 15.5vw)/.8 var(--f-display);
   font-variation-settings: "opsz" 96; letter-spacing: -.045em; text-transform: uppercase;
-  padding-inline: .02em .06em;                    /* room for the negative tracking's last glyph */
 }
-#download .dl__wm { position: relative; z-index: 1; display: block; }
-/* The finale's notch: hangs under the menu bar, descends into the word, widens into a band across the cap
-   height (the letters emerge inside it), then dissolves. End state (no JS / reduced) = gone, word whole. */
-#download .dl__notch {
-  position: absolute; z-index: 0; left: 50%; translate: -50% 0;
-  top: calc(var(--cap-top) - .07em); width: var(--notch-w); height: var(--notch-h);
-  background: #000; border-radius: 0 0 14px 14px; pointer-events: none; opacity: 0;
-  box-shadow: 0 0 0 1px rgb(255 255 255 / .16), 0 .18em .6em -.1em rgb(255 181 71 / .28);
-}
-#download .dl__cam {
-  position: absolute; top: 50%; right: 22%; width: 6px; height: 6px; translate: 0 -50%; border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #2a3350, #07080d 70%); box-shadow: 0 0 0 1px rgb(255 255 255 / .06);
-}
-#download .dl__egg {
-  position: absolute; left: 50%; translate: -50% 0; z-index: 2;
-  top: calc(var(--cap-top) - .09em); height: calc(var(--cap-h) * .34 + .09em); width: 16%;
-  background: #000; border-radius: 0 0 .12em .12em; pointer-events: none;
-  visibility: hidden; clip-path: inset(0 100% 0 0);
-}
-
+#download .dl__wm { display: flex; justify-content: center; padding-inline: .02em .06em; }
+#download .dl__wm i { display: block; font-style: normal; }
 #download .dl__h {
-  margin-top: clamp(18px, 3.4vh, 36px);
+  margin-top: clamp(16px, 3vh, 32px);
   font: 760 calc(var(--t-h2) * .6)/1.05 var(--f-display); letter-spacing: -.028em;
   font-variation-settings: "opsz" 48; text-wrap: balance;
 }
 
-/* ---- actions */
-#download .dl__act { display: flex; flex-direction: column; align-items: center; margin-top: clamp(22px, 4.2vh, 44px); }
-/* the meta line is a little menu bar; download.js types it in */
+/* ---- the CTA hangs from the band, like the download sheet's panel */
+#download .dl__tab {
+  position: relative; z-index: 1; padding: 6px 14px 14px; background: #000; border-radius: 0 0 32px 32px;
+}
+#download .dl__cta { --h: clamp(60px, 6vw, 80px); padding-inline: clamp(28px, 3vw, 44px); font-size: clamp(18px, 1.6vw, 24px); gap: 14px; }
+#download .dl__cta .cta__arrow { width: 1em; height: 1em; }
+
+/* ---- the small print, on the wallpaper */
+#download .dl__low { position: relative; z-index: 0; display: flex; flex-direction: column; align-items: center; text-align: center; padding-block: clamp(22px, 4vh, 40px) 48px; }
 #download .dl__meta {
-  display: flex; align-items: center; gap: 10px; margin-top: 22px; max-width: 100%;
+  display: flex; align-items: center; gap: 10px; max-width: 100%;
   min-height: 30px; padding: 6px 14px; border-radius: 8px; background: #000;
   box-shadow: inset 0 -1px 0 #2E2E2E, 0 0 0 1px rgb(255 255 255 / .06);
   color: var(--fg-2); text-align: left; font-size: 12px; line-height: 1.4; text-transform: none; letter-spacing: .02em;
@@ -1414,39 +1502,36 @@ html.still #privacy .pv__st .bandtext { display: none; }
 #download .dl__meta svg { flex: none; width: 16px; height: 11px; color: var(--fg); }
 #download .dl__meta .fill { fill: currentColor; }
 #download .dl__type { display: block; }
-#download .dl__cta { --h: clamp(64px, 6.4vw, 84px); padding-inline: clamp(30px, 3vw, 46px); font-size: clamp(19px, 1.7vw, 26px); gap: 14px; }
-#download .dl__cta .cta__arrow { width: 1em; height: 1em; }
-#download .gh-link { margin-top: 22px; }
+#download .gh-link { margin-top: 20px; color: var(--fg); }
 #download .dl__card {
-  display: inline-flex; align-items: center; gap: 12px; margin-top: clamp(26px, 4.4vh, 44px);
+  display: inline-flex; align-items: center; gap: 12px; margin-top: clamp(22px, 3.6vh, 36px);
   max-width: 30rem; padding: 10px 18px 10px 10px; border-radius: 18px;
-  box-shadow: inset 0 0 0 1px var(--line); color: var(--fg-2);
+  background: rgb(0 0 0 / .42); box-shadow: inset 0 0 0 1px var(--line); color: var(--fg-2);
   font: 420 14px/1.4 var(--f-text); text-align: left;
   transition: background-color var(--d-ui) var(--e-out), color var(--d-ui) var(--e-out), box-shadow var(--d-ui) var(--e-out);
 }
 #download .dl__card img { flex: none; width: 28px; height: 28px; border-radius: 7px; rotate: -6deg; transition: rotate var(--d-ui) var(--e-out); }
 #download .dl__card b { color: var(--fg); font-weight: 640; }
 #download .dl__arr { display: inline-block; transition: translate var(--d-ui) var(--e-out); }
-#download .dl__card:hover { background: rgb(255 255 255 / .045); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line-2); }
+#download .dl__card:hover { background: rgb(0 0 0 / .6); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line-2); }
 #download .dl__card:hover img { rotate: 0deg; }
 #download .dl__card:hover .dl__arr { translate: 2px -2px; }
 #download .dl__card:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 
 /* ---- the sticky track (motion only) */
-html.js:not(.still) #download { height: 230vh; }
+html.js:not(.still) #download { height: 200vh; }
 html.js:not(.still) #download .dl__stage { position: sticky; top: 0; height: 100vh; height: 100svh; min-height: 0; }
-html.js:not(.still) #download.is-live .dl__stage { background: transparent; }
 
 @media (max-width: 899px) {
-  html.js:not(.still) #download { height: 190vh; }
-  #download .dl__stage { padding-block: calc(var(--mb) + 32px) 40px; }
+  html.js:not(.still) #download { height: 170vh; }
   #download .dl__word { font-size: 22vw; font-stretch: 75%; font-variation-settings: "opsz" 96, "wdth" 75; letter-spacing: -.03em; }
   #download .dl__meta { align-items: flex-start; }
   #download .dl__meta svg { margin-top: 3px; }
-  #download .dl__card { margin-top: 26px; }
+  #download .dl__tab { padding: 4px 10px 10px; border-radius: 0 0 26px 26px; }
 }
 @media (max-width: 899px) and (max-height: 700px) {
-  #download .dl__eye { margin-bottom: 10px; }
-  #download .dl__act, #download .dl__card { margin-top: 18px; }
-  #download .gh-link { margin-top: 14px; }
+  #download .dl__band { padding-top: calc(var(--mb) + 18px); padding-bottom: 20px; }
+  #download .dl__low { padding-top: 16px; }
+  #download .dl__card { margin-top: 16px; }
+  #download .gh-link { margin-top: 12px; }
 }

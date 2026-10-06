@@ -44,8 +44,8 @@ const HP = `<div class="sheet-hp" aria-hidden="true" inert><label>Leave this emp
 const VIEWS = {
   mac: (v) => `
     <p class="sheet-kicker">DOWNLOAD · v${v} · FREE</p>
-    <h2 id="sheet-title" class="sheet-title" tabindex="-1">Get a note when Notched updates.</h2>
-    <p id="sheet-lede" class="sheet-lede">Leave your email and the download starts right away. The app updates itself either way.</p>
+    <h2 id="sheet-title" class="sheet-title" tabindex="-1">Notched is one email away.</h2>
+    <p id="sheet-lede" class="sheet-lede">Leave your email and the download starts at once. The app checks for updates by itself either way.</p>
     <form class="sheet-form" novalidate data-form="mac">
       <div class="sheet-field"><label for="sheet-email">Email</label>
         <input id="sheet-email" name="email" type="email" required autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="you@example.com" aria-describedby="sheet-err"></div>
@@ -58,7 +58,7 @@ const VIEWS = {
   macDone: (v, { email } = {}) => `
     <p class="sheet-kicker sheet-kicker--ok">${CHECK}NOTCHED · v${v}</p>
     <h2 id="sheet-title" class="sheet-title" tabindex="-1">On its way.</h2>
-    ${email ? `<p class="sheet-who">We'll write to ${esc(email)} when there's a new version. <button type="button" class="sheet-text" data-act="forget">Not you?</button></p>` : ''}
+    ${email ? `<p class="sheet-who">Update news goes to ${esc(email)}. <button type="button" class="sheet-text" data-act="forget">Not you?</button></p>` : ''}
     <p id="sheet-lede" class="sheet-lede">Open the disk image and drag Notched to Applications. Open it, agree to the license, then click its icon in the menu bar (a small screen with a bar across the top) and flip the switch.</p>
     <p class="sheet-fine">Didn't start? <a href="${DOWNLOAD}" data-act="again">Download again</a></p>
     ${email ? '' : '<button type="button" class="sheet-text" data-act="forget">Use a different email</button>'}
@@ -90,7 +90,7 @@ const VIEWS = {
     </div>`,
 };
 
-let dlg, panel, body, band, glint, fils = [], opener = null, firstMac = true, pendingHash = '', busy = false;
+let dlg, shell, panel, body, band, glint, probe, fils = [], opener = null, firstMac = true, pendingHash = '', busy = false, wasBlack = false;
 
 function build() {
   dlg = document.createElement('dialog');
@@ -98,14 +98,18 @@ function build() {
   dlg.setAttribute('aria-labelledby', 'sheet-title');
   dlg.setAttribute('aria-describedby', 'sheet-lede');
   dlg.innerHTML = `
-    <div class="sheet__band" aria-hidden="true"><i class="sheet__glint"></i><i class="sheet__fil sheet__fil--l"></i><i class="sheet__fil sheet__fil--r"></i></div>
-    <div class="sheet__panel">
+    <div class="sheet__band" aria-hidden="true" inert><i class="sheet__glint"></i><i class="sheet__fil sheet__fil--l"></i><i class="sheet__fil sheet__fil--r"></i></div>
+    <div class="sheet__shell"><div class="sheet__panel"><div class="sheet__scroll">
       <div class="sheet__head"><span class="sheet__app"><svg viewBox="0 0 16 11" aria-hidden="true"><use href="#i-notched"/></svg>Notched</span>
         <button type="button" class="sheet__x" aria-label="Close" data-act="close"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2 2 12"/></svg></button></div>
       <div class="sheet__body"></div>
-    </div>`;
+    </div></div></div>
+    <svg class="sheet__cam" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="3.5" fill="#0B0F1A" stroke="#24304A" stroke-width="1.5"/><circle cx="4.1" cy="4.1" r=".75" fill="#7C8BB0"/></svg>
+    <i class="sheet__probe" aria-hidden="true"></i>`;
   document.body.append(dlg);
+  shell = dlg.querySelector('.sheet__shell');
   panel = dlg.querySelector('.sheet__panel');
+  probe = dlg.querySelector('.sheet__probe');
   body = dlg.querySelector('.sheet__body');
   band = dlg.querySelector('.sheet__band');
   glint = dlg.querySelector('.sheet__glint');
@@ -150,7 +154,7 @@ function onSubmit(e) {
     // The panel retracts up into the notch as the download starts, then drops again with the next steps.
     busy = true;
     glint.animate([{ transform: 'scaleX(1)', opacity: 0 }, { transform: 'scaleX(1)', opacity: 1, offset: 0.3, easing: cssEase('sweep') }, { transform: 'scaleX(0)', opacity: 1 }], { duration: 560 });
-    lift().then(() => { show('macDone', { email }, { first: true }); drop(60); }).finally(() => { busy = false; });
+    lift().then(() => { show('macDone', { email }, { first: true }); drop(60, -60); }).finally(() => { busy = false; });
     return;
   }
   // away: optional email, then share → clipboard → visible URL.
@@ -182,24 +186,64 @@ function show(name, opts = {}, { focusField = false, first = false } = {}) {
 }
 
 function rise(delay) {
-  [...body.children].forEach((n, i) => n.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: delay + i * 40, easing: cssEase('out'), fill: 'backwards' }));
+  [...body.children].forEach((n, i) => n.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: delay + i * 30, easing: cssEase('out'), fill: 'backwards' }));
 }
 
-// The band grows out of the notch; the panel drops from behind it on a spring and lifts back into it.
+// The notch opens. The band (a copy of the nav, turned black) keeps the menu bar and the camera on screen; the nav's
+// notch widens along the band, then drops to the panel's full height, with 10 → 20 pt fillets where it meets the
+// band. A lit outline (the shell, 1 px outside the panel) traces the shape and cools to a hairline. Close reverses it.
 const NOTCH = 'inset(0 calc(50% - var(--notch-w) / 2) calc(100% - var(--notch-h)) round 0 0 10px 10px)';
 const BAND = 'inset(0 0 0 0 round 0 0 0 0)';
-const stop = () => [panel, ...fils].forEach((n) => n.getAnimations().forEach((a) => a.cancel()));
+const MORPH = 550, SPLIT = 0.36, LIT = 'rgb(255 181 71 / .85)', HAIR = '#2E2E2E';
+const stop = () => [panel, shell, ...fils].forEach((n) => n.getAnimations().forEach((a) => a.cancel()));
 
-function drop(delay) {
-  stop();
-  panel.animate([{ transform: 'translateY(-100%)' }, { transform: 'none' }], { duration: 640, delay, easing: cssEase('spring'), fill: 'backwards' });
-  fils.forEach((f) => f.animate([{ transform: 'scale(0)' }, { transform: 'scale(1)' }], { duration: 220, delay: delay + 280, easing: cssEase('fillet'), fill: 'backwards' }));
-  rise(delay + 140);
+function shapes() {
+  const w = panel.offsetWidth, h = panel.offsetHeight, mb = band.offsetHeight;
+  const nw = probe.offsetWidth || 185, nh = probe.offsetHeight || 32;
+  const L = Math.max(0, (w - nw) / 2), B = Math.max(0, h - nh), r = nh * 9 / 32;
+  const clip = (o) => [   // o = 0 for the panel, 1 for the outline around it
+    `inset(0px ${L}px ${B}px ${L}px round 0px 0px ${r + o}px ${r + o}px)`,
+    `inset(0px 0px ${B}px 0px round 0px 0px ${r + o}px ${r + o}px)`,
+    o ? `inset(${mb}px 0px 0px 0px round 0px 0px 29px 29px)` : 'inset(0px 0px 0px 0px round 0px 0px 28px 28px)',
+  ];
+  return { p: clip(0), s: clip(1) };
 }
 
-function lift() {
-  fils.forEach((f) => f.animate([{ transform: 'scale(1)' }, { transform: 'scale(0)' }], { duration: 110, fill: 'forwards' }));
-  return panel.animate([{ transform: 'none' }, { transform: 'translateY(-100%)' }], { duration: 280, easing: cssEase('swallow'), fill: 'forwards' }).finished;
+/** dir 1: notch → panel (open). dir -1: panel → notch (close). Resolves when the shape lands. */
+function morph(dir, delay = 0) {
+  stop();
+  const { p, s } = shapes();
+  if (dir > 0) {
+    const o = { duration: MORPH, delay, fill: 'backwards' };
+    const k = (c, i, x = {}) => ({ clipPath: c[i], ...x });
+    const e1 = cssEase('sweep'), e2 = cssEase('out');
+    shell.animate([k(s, 0, { backgroundColor: LIT, easing: e1 }), k(s, 1, { backgroundColor: LIT, offset: SPLIT, easing: e2 }), k(s, 2, { backgroundColor: HAIR })], o);
+    fils.forEach((f) => f.animate([{ transform: 'scale(0)' }, { transform: 'scale(0)', offset: SPLIT }, { transform: 'scale(.5)', offset: 0.7, easing: cssEase('fillet') }, { transform: 'scale(1)' }], o));
+    return panel.animate([k(p, 0, { easing: e1 }), k(p, 1, { offset: SPLIT, easing: e2 }), k(p, 2)], o).finished;
+  }
+  const o = { duration: 400, delay, fill: 'forwards' }, at = 1 - SPLIT;
+  const e1 = cssEase('swallow'), e2 = cssEase('sweep');
+  shell.animate([{ clipPath: s[2], backgroundColor: HAIR, easing: e1 }, { clipPath: s[1], backgroundColor: LIT, offset: at, easing: e2 }, { clipPath: s[0], backgroundColor: LIT }], o);
+  fils.forEach((f) => f.animate([{ transform: 'scale(1)' }, { transform: 'scale(0)', offset: 0.5 }, { transform: 'scale(0)' }], o));
+  return panel.animate([{ clipPath: p[2], easing: e1 }, { clipPath: p[1], offset: at, easing: e2 }, { clipPath: p[0] }], o).finished;
+}
+
+function drop(delay, settle = 120) { morph(1, delay); rise(delay + MORPH + settle); }
+const lift = () => morph(-1);
+
+// The band is the real menu bar, turned black: a static copy of the nav, so its text and notch stay put.
+function copyNav() {
+  band.querySelector('.nav')?.remove();
+  const nav = document.getElementById('nav');
+  wasBlack = !!nav?.classList.contains('is-black');
+  if (!nav) return;
+  const c = nav.cloneNode(true);
+  c.removeAttribute('id');
+  c.classList.add('is-black');
+  c.querySelectorAll('[id],[data-cta],[data-nav-notch],[data-clock],[data-time-cycle],[data-nav-icon],[data-menu-open],[data-nav-app]')
+    .forEach((n) => ['id', 'data-cta', 'data-nav-notch', 'data-clock', 'data-time-cycle', 'data-nav-icon', 'data-menu-open', 'data-nav-app'].forEach((a) => n.removeAttribute(a)));
+  ['transform', 'translate', 'opacity', 'visibility'].forEach((pr) => c.style.removeProperty(pr));
+  band.prepend(c);
 }
 
 export async function openSignup(el, { viaPointer = false, downloaded = false } = {}) {
@@ -211,12 +255,15 @@ export async function openSignup(el, { viaPointer = false, downloaded = false } 
   const view = noMac() ? 'macAway' : downloaded ? 'macDone' : 'mac';
   const html = document.documentElement;
   html.classList.add('sheet-open');
+  copyNav();
   dlg.showModal();
   show(view, view === 'macDone' ? { email: storedEmail() } : {}, { first: true, focusField: viaPointer });
   if (reduced()) { dlg.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 120 }); return; }
-  band.animate([{ clipPath: NOTCH }, { clipPath: BAND }], { duration: 250, easing: cssEase('sweep') });
-  glint.animate([{ transform: 'scaleX(0)', opacity: 1, easing: cssEase('sweep') }, { transform: 'scaleX(1)', opacity: 1, offset: 0.4 }, { transform: 'scaleX(1)', opacity: 0 }], { duration: 700 });
-  drop(210);
+  // A menu bar that isn't black yet goes black first, spreading out of the notch (the product's trick).
+  const d = wasBlack ? 0 : 200;
+  if (!wasBlack) band.animate([{ clipPath: NOTCH }, { clipPath: BAND }], { duration: 260, easing: cssEase('sweep'), fill: 'backwards' });
+  glint.animate([{ transform: 'scaleX(0)', opacity: 1, easing: cssEase('sweep') }, { transform: 'scaleX(1)', opacity: 1, offset: 0.4 }, { transform: 'scaleX(1)', opacity: 0 }], { duration: 700, delay: d });
+  drop(d);
 }
 
 export async function close() {
@@ -227,7 +274,7 @@ export async function close() {
     else {
       dlg.classList.add('is-closing');
       await lift();
-      await band.animate([{ clipPath: BAND }, { clipPath: NOTCH }], { duration: 200, easing: cssEase('sweep'), fill: 'forwards' }).finished;
+      if (!wasBlack) await band.animate([{ clipPath: BAND }, { clipPath: NOTCH }], { duration: 200, easing: cssEase('sweep'), fill: 'forwards' }).finished;
     }
   } catch {}
   dlg.close();

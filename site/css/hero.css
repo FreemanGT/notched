@@ -1,14 +1,25 @@
+@property --hw-top { syntax: "<color>"; inherits: true; initial-value: #000; }
+@property --hw-mid { syntax: "<color>"; inherits: true; initial-value: #000; }
+@property --hw-hz { syntax: "<color>"; inherits: true; initial-value: #000; }
+@property --hw-sun { syntax: "<color>"; inherits: true; initial-value: #000; }
+@property --hw-bloom-x { syntax: "<percentage>"; inherits: true; initial-value: 50%; }
+@property --hw-bloom-y { syntax: "<percentage>"; inherits: true; initial-value: 50%; }
 /* #hero: "Black out the notch." (SPEC §5.1). The viewport is the glass; the fixed .nav is its menu bar. */
 #hero { position: relative; height: 180vh; background: #000; }
 #hero .hero__stage { position: sticky; top: 0; height: 100vh; overflow: clip; isolation: isolate; }
 
 /* wallpaper: CSS sky first paint, then the procedural screen on top */
-#hero .hero__wall { position: absolute; inset: 0; transform-origin: 50% 30%; will-change: transform; }
+/* transform-origin on the band line: the pull-back (hero.js, .55 → .92) keeps the wallpaper's top under the black bar,
+   so the band becomes the top bezel and the wallpaper a framed screen. --pull (0..1) lights its rim. */
+#hero .hero__wall { position: absolute; inset: 0; transform-origin: 50% var(--mb); will-change: transform; --pull: 0;
+  border-radius: 0 0 calc(18 * var(--pt)) calc(18 * var(--pt));
+  box-shadow: 0 0 0 1px rgba(255,255,255,calc(.14 * var(--pull))), 0 30px 120px -20px rgba(0,0,0,calc(.9 * var(--pull)));
+  transition: --hw-top 900ms var(--e-out), --hw-mid 900ms var(--e-out), --hw-hz 900ms var(--e-out), --hw-sun 900ms var(--e-out), --hw-bloom-x 900ms var(--e-out), --hw-bloom-y 900ms var(--e-out); }
 #hero .hero__sky, #hero .hero__screen, #hero .hero__dim, #hero .hero__fade { position: absolute; inset: 0; }
 #hero .hero__sky { --a: var(--wp-day-top); --b: var(--wp-day-mid); --c: var(--wp-day-hz); background: linear-gradient(180deg, var(--a), var(--b) 52%, var(--c)); }
-html[data-phase="dawn"] #hero .hero__sky { --a: var(--wp-dawn-top); --b: var(--wp-dawn-mid); --c: var(--wp-dawn-hz); }
-html[data-phase="dusk"] #hero .hero__sky { --a: var(--wp-dusk-top); --b: var(--wp-dusk-mid); --c: var(--wp-dusk-hz); }
-html[data-phase="night"] #hero .hero__sky { --a: var(--wp-night-top); --b: var(--wp-night-mid); --c: var(--wp-night-hz); }
+:is(html[data-phase="dawn"] #hero:not([data-phase]), #hero[data-phase="dawn"]) .hero__sky { --a: var(--wp-dawn-top); --b: var(--wp-dawn-mid); --c: var(--wp-dawn-hz); }
+:is(html[data-phase="dusk"] #hero:not([data-phase]), #hero[data-phase="dusk"]) .hero__sky { --a: var(--wp-dusk-top); --b: var(--wp-dusk-mid); --c: var(--wp-dusk-hz); }
+:is(html[data-phase="night"] #hero:not([data-phase]), #hero[data-phase="night"]) .hero__sky { --a: var(--wp-night-top); --b: var(--wp-night-mid); --c: var(--wp-night-hz); }
 #hero .nt-screen { animation: hero-in 500ms var(--e-out) backwards; }
 /* the nav draws this screen's menu bar, band, notch and fillets (same node, no seam) */
 #hero .nt-mb, #hero .nt-band, #hero .nt-slot, #hero .nt-fil, #hero .nt-notch, #hero .nt-notch-hit, #hero .nt-flash { display: none; }
@@ -18,43 +29,46 @@ html[data-phase="night"] #hero .hero__sky { --a: var(--wp-night-top); --b: var(-
    perspective (haze → ink), a sun-coloured rim on every crest, a bloom behind them. Replaces the component's
    faint white hills here only. */
 #hero .nt-wp__land { display: none; }
-#hero .hero__wall { --top: var(--wp-day-top); --mid: var(--wp-day-mid); --hz: var(--wp-day-hz); --sun: var(--wp-day-sun); --bloom-x: 70%; --bloom-y: 52%; }
-html[data-phase="dawn"] #hero .hero__wall { --top: var(--wp-dawn-top); --mid: var(--wp-dawn-mid); --hz: var(--wp-dawn-hz); --sun: var(--wp-dawn-sun); --bloom-x: 24%; --bloom-y: 60%; }
-html[data-phase="dusk"] #hero .hero__wall { --top: var(--wp-dusk-top); --mid: var(--wp-dusk-mid); --hz: var(--wp-dusk-hz); --sun: var(--wp-dusk-sun); --bloom-x: 76%; --bloom-y: 60%; }
-html[data-phase="night"] #hero .hero__wall { --top: var(--wp-night-top); --mid: #2A3A7A; --hz: #4B5FA8; --sun: var(--wp-night-sun); --bloom-x: 26%; --bloom-y: 40%; }
+#hero .hero__wall { --hw-top: var(--wp-day-top); --hw-mid: var(--wp-day-mid); --hw-hz: var(--wp-day-hz); --hw-sun: var(--wp-day-sun); --hw-bloom-x: 70%; --hw-bloom-y: 52%; }
+:is(html[data-phase="dawn"] #hero:not([data-phase]), #hero[data-phase="dawn"]) .hero__wall { --hw-top: var(--wp-dawn-top); --hw-mid: var(--wp-dawn-mid); --hw-hz: var(--wp-dawn-hz); --hw-sun: var(--wp-dawn-sun); --hw-bloom-x: 24%; --hw-bloom-y: 60%; }
+:is(html[data-phase="dusk"] #hero:not([data-phase]), #hero[data-phase="dusk"]) .hero__wall { --hw-top: var(--wp-dusk-top); --hw-mid: var(--wp-dusk-mid); --hw-hz: var(--wp-dusk-hz); --hw-sun: var(--wp-dusk-sun); --hw-bloom-x: 76%; --hw-bloom-y: 60%; }
+:is(html[data-phase="night"] #hero:not([data-phase]), #hero[data-phase="night"]) .hero__wall { --hw-top: var(--wp-night-top); --hw-mid: #2A3A7A; --hw-hz: #4B5FA8; --hw-sun: var(--wp-night-sun); --hw-bloom-x: 26%; --hw-bloom-y: 40%; }
 #hero .hero__bloom { position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(28% 34% at var(--bloom-x) var(--bloom-y), color-mix(in oklab, var(--sun) 85%, transparent), transparent 70%),
-              radial-gradient(70% 45% at var(--bloom-x) 70%, color-mix(in oklab, var(--hz) 70%, transparent), transparent 75%); }
-html[data-phase="dusk"] #hero .hero__bloom, html[data-phase="dawn"] #hero .hero__bloom { filter: saturate(1.35); }
+  background: radial-gradient(28% 34% at var(--hw-bloom-x) var(--hw-bloom-y), color-mix(in oklab, var(--hw-sun) 85%, transparent), transparent 70%),
+              radial-gradient(70% 45% at var(--hw-bloom-x) 70%, color-mix(in oklab, var(--hw-hz) 70%, transparent), transparent 75%); }
+:is(html[data-phase="dusk"] #hero:not([data-phase]), #hero[data-phase="dusk"], html[data-phase="dawn"] #hero:not([data-phase]), #hero[data-phase="dawn"]) .hero__bloom { filter: saturate(1.35); }
 #hero .hero__ridges, #hero .hero__ridge { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 #hero .hero__ridge { overflow: visible; will-change: transform; }
-#hero .hero__ridge .r { fill: none; stroke: var(--sun); stroke-width: 1.4; vector-effect: non-scaling-stroke; stroke-linecap: round; }
-#hero .hero__ridge:nth-child(1) .f { fill: color-mix(in oklab, var(--hz) 62%, var(--mid)); }
-#hero .hero__ridge:nth-child(2) .f { fill: color-mix(in oklab, var(--mid) 72%, var(--hz)); }
-#hero .hero__ridge:nth-child(3) .f { fill: color-mix(in oklab, var(--mid) 45%, var(--top)); }
-#hero .hero__ridge:nth-child(4) .f { fill: color-mix(in oklab, var(--top) 60%, #000); }
-#hero .hero__ridge:nth-child(5) .f { fill: color-mix(in oklab, var(--top) 22%, #000); }
+#hero .hero__ridge .r { fill: none; stroke: var(--hw-sun); stroke-width: 1.4; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+#hero .hero__ridge:nth-child(1) .f { fill: color-mix(in oklab, var(--hw-hz) 62%, var(--hw-mid)); }
+#hero .hero__ridge:nth-child(2) .f { fill: color-mix(in oklab, var(--hw-mid) 72%, var(--hw-hz)); }
+#hero .hero__ridge:nth-child(3) .f { fill: color-mix(in oklab, var(--hw-mid) 45%, var(--hw-top)); }
+#hero .hero__ridge:nth-child(4) .f { fill: color-mix(in oklab, var(--hw-top) 60%, #000); }
+#hero .hero__ridge:nth-child(5) .f { fill: color-mix(in oklab, var(--hw-top) 22%, #000); }
 #hero .hero__ridge:nth-child(1) .r { opacity: .35; }
 #hero .hero__ridge:nth-child(2) .r { opacity: .5; }
 #hero .hero__ridge:nth-child(3) .r { opacity: .7; }
 #hero .hero__ridge:nth-child(4) .r { opacity: .75; }
 #hero .hero__ridge:nth-child(5) .r { opacity: .55; }
 /* haze between the far and near ranges */
-#hero .hero__ridges::after { content: ""; position: absolute; inset: 40% 0 0; background: linear-gradient(180deg, transparent, color-mix(in oklab, var(--hz) 28%, transparent) 30%, transparent 62%); mix-blend-mode: screen; }
+#hero .hero__ridges::after { content: ""; position: absolute; inset: 40% 0 0; background: linear-gradient(180deg, transparent, color-mix(in oklab, var(--hw-hz) 28%, transparent) 30%, transparent 62%); mix-blend-mode: screen; }
 
 /* the glass edge: thin bezel rim + the screen's rounded top corners, so the band reads as part of the display */
 #hero .hero__stage::after { content: ""; position: absolute; z-index: 5; inset: 0 var(--bezel); pointer-events: none;
-  border-radius: calc(18 * var(--pt, 1px)) calc(18 * var(--pt, 1px)) 0 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), 0 0 0 var(--bezel) #000; }
+  border-radius: calc(18 * var(--pt, 1px)) calc(18 * var(--pt, 1px)) 0 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), 0 0 0 var(--bezel) #000; opacity: calc(1 - var(--pull, 0)); }
 #hero .hero__fade { background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,.6) 70%, #000), radial-gradient(70% 55% at 0% 100%, rgba(0,0,0,.55), transparent 70%); }
 #hero .hero__spill { position: absolute; left: -10%; right: -10%; bottom: -45vh; height: 70vh; pointer-events: none; mix-blend-mode: screen;
   background: radial-gradient(50% 50% at 50% 50%, var(--spill, var(--wp-day-hz)), transparent 70%); opacity: .22; filter: blur(30px); }
-html[data-phase="dawn"] #hero .hero__spill { --spill: var(--wp-dawn-hz); }
-html[data-phase="dusk"] #hero .hero__spill { --spill: var(--wp-dusk-hz); }
-html[data-phase="night"] #hero .hero__spill { --spill: var(--wp-night-hz); }
+:is(html[data-phase="dawn"] #hero:not([data-phase]), #hero[data-phase="dawn"]) .hero__spill { --spill: var(--wp-dawn-hz); }
+:is(html[data-phase="dusk"] #hero:not([data-phase]), #hero[data-phase="dusk"]) .hero__spill { --spill: var(--wp-dusk-hz); }
+:is(html[data-phase="night"] #hero:not([data-phase]), #hero[data-phase="night"]) .hero__spill { --spill: var(--wp-night-hz); }
 
 /* content: bottom-left, cols 1–8 */
 #hero .hero__content { position: absolute; z-index: 3; left: 6vw; bottom: 9vh; width: min(66vw, 1040px); }
-#hero .hero__chips { color: var(--fg-2); margin-bottom: clamp(14px, 2.2vh, 24px); }
+#hero .hero__content::before { content: ""; position: absolute; z-index: -1; inset: -30% -30% -40% -12vw; pointer-events: none;
+  background: radial-gradient(80% 72% at 30% 56%, rgba(0,0,0,.85), rgba(0,0,0,.72) 50%, transparent 100%); }
+#hero :is(.hero__chips, .hero__cap, .hero__lede, .hero__toggle, .hero__note) { text-shadow: 0 1px 14px rgba(0,0,0,.7), 0 0 2px rgba(0,0,0,.6); }
+#hero .hero__chips { color: var(--fg); margin-bottom: clamp(14px, 2.2vh, 24px); }
 #hero .hero__chips [data-version] { text-transform: none; }
 #hero .hero__h1 { color: var(--fg); margin: 0; }
 #hero .hero__l { display: block; }
@@ -63,14 +77,24 @@ html[data-phase="night"] #hero .hero__spill { --spill: var(--wp-night-hz); }
 #hero .hero__word { display: inline-block; }
 #hero .hero__ch { display: inline-block; text-align: center; will-change: transform, opacity; }
 /* "notch" collapses into this black capsule, which flies up into the camera housing; the period then closes the gap */
-#hero .hero__pod { position: absolute; left: -.04em; right: -.04em; top: .24em; bottom: .08em; border-radius: 999px; background: #000;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.16), 0 .25em 1em rgba(0,0,0,.45); opacity: 0; pointer-events: none; will-change: transform, opacity; }
+/* the redaction: the privacy section's black bar, swept across "notch" at band speed; it stays. The letters then lift
+   out of it into the camera housing (hero.js). 1px rim = the notch's rim light, so black reads on near-black. */
+#hero .hero__bar { position: absolute; z-index: 1; left: -.06em; right: -.06em; top: .1em; bottom: -.02em; background: #000;
+  outline: 1px solid rgba(255,255,255,.2); outline-offset: -1px; pointer-events: none; clip-path: inset(0 100% 0 0); }
+#hero .hero__w .hero__ch, #hero .hero__word { position: relative; }
+/* concave fillets under the band, on the wallpaper itself so they ride the pull-back. Radius --hr (macOS pt) is scrubbed 0 → 14 → 20. */
+#hero .hero__fil { position: absolute; z-index: 2; top: var(--mb); width: calc(var(--hr, 0) * var(--pt)); height: calc(var(--hr, 0) * var(--pt)); pointer-events: none;
+  background: radial-gradient(circle at 100% 100%, transparent calc(var(--hr, 0) * var(--pt) - .6px), #000 calc(var(--hr, 0) * var(--pt)));
+  transform: scale(0); transform-origin: 0 0; transition: transform 500ms var(--e-fillet); }
+#hero .hero__fil--l { left: 0; }
+#hero .hero__fil--r { right: 0; transform-origin: 100% 0; background: radial-gradient(circle at 0 100%, transparent calc(var(--hr, 0) * var(--pt) - .6px), #000 calc(var(--hr, 0) * var(--pt))); }
+html.band-on #hero .hero__fil { transform: scale(1); }
 #hero .hero__dot { display: inline-block; will-change: transform; }
-#hero .hero__cap { color: var(--fg-2); margin-top: clamp(12px, 1.8vh, 20px); }
+#hero .hero__cap { color: var(--fg); margin-top: clamp(12px, 1.8vh, 20px); }
 html.js:not(.still) #hero .hero__cap { clip-path: inset(0 100% 0 0); }
 #hero .hero__lede { color: var(--fg-2); font: 480 var(--t-lede)/1.4 var(--f-text); font-variation-settings: "opsz" 24; max-width: 34ch; margin-top: clamp(18px, 3vh, 32px); text-wrap: pretty; }
 #hero .hero__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: clamp(20px, 3.4vh, 36px); }
-#hero .hero__note { color: var(--fg-3); margin-top: 14px; }
+#hero .hero__note { color: var(--fg-2); margin-top: 14px; }
 #hero .hero__toggle { display: inline-flex; align-items: center; min-height: 32px; margin: -6px 0 10px; color: var(--fg); text-decoration: underline; text-underline-offset: 4px; }
 #hero .hero__toggle[hidden] { display: none; }
 #hero a:focus-visible, #hero button:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
@@ -118,7 +142,6 @@ html.js:not(.still) #hero .hero__hint { display: block; }
 @media (max-width: 899px) {
   #hero { height: 145vh; }
   #hero .hero__stage { height: 100vh; height: 100svh; }
-  #hero .hero__wall { transform-origin: 50% 20%; }
   #hero .hero__fade { background: linear-gradient(180deg, transparent 24%, rgba(0,0,0,.6) 42%, #000 58%); }
   #hero .hero__spill { bottom: auto; top: 30svh; height: 50svh; }
   #hero .hero__ridges { transform: translateY(-22%); }

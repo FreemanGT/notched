@@ -1,6 +1,8 @@
 // #gone: the manifesto (SPEC §5.2). Each line of each paragraph is inked by a bandText reading band
 // (origin left, p 0→1, sweep) scrubbed over the section. "black" gets its pill and "Flip one switch."
-// its underline as the band passes them. Reduced motion: CSS shows the finished poster; nothing runs.
+// its underline as the band passes them. Behind the copy, the zoomed menu bar (--k) darkens with every
+// inked line and is #000 exactly when "black" inks; the notch's rim then wipes up into the bezel while
+// "notch was all along." inks. Reduced motion: CSS shows the finished poster; nothing runs.
 import { bandText } from './lib/bandtext.js';
 import { splitLines } from './lib/split.js';
 import { EASE } from './lib/motion.js';
@@ -8,8 +10,14 @@ import { EASE } from './lib/motion.js';
 export default function init(root, ctx) {
   const { gsap, mm, MQ } = ctx;
   const ps = [...root.querySelectorAll('.gone__p')];
-  const stage = root.querySelector('.gone__stage'), land = root.querySelector('.gone__land');
-  const housing = root.querySelector('.gone__housing'), leak = root.querySelector('.gone__leak'), beam = root.querySelector('.gone__beam');
+  const land = root.querySelector('.gone__land');
+  const notch = root.querySelector('.gone__notch'), rims = root.querySelectorAll('.gone__rim, .gone__lens');
+  const setK = (k) => root.style.setProperty('--k', k.toFixed(3));
+  // r 0..1: the rim fades and is wiped up into the bezel (the fill goes too; the bar is black by then)
+  const setR = (r) => {
+    rims.forEach((n) => { n.style.opacity = (1 - r).toFixed(3); });
+    notch.style.clipPath = `inset(0 0 ${(r * 100).toFixed(2)}% 0)`;
+  };
 
   mm.add(MQ, (c) => {
     const { still, mob } = c.conditions;
@@ -19,7 +27,6 @@ export default function init(root, ctx) {
     // the hero's hills sink and darken into the bezel while the section slides up (no dead black frame)
     const sink = gsap.fromTo(land, { yPercent: 0, scaleY: 1, opacity: 1 }, { yPercent: 55, scaleY: .55, opacity: 0, ease: 'none',
       scrollTrigger: { trigger: root, start: 'top bottom', end: 'top 15%', scrub: .4 } });
-    const setY = gsap.quickSetter(beam, 'y', 'px'), setS = gsap.quickSetter(leak, 'scaleY');
 
     const build = () => {
       queued = false;
@@ -44,23 +51,16 @@ export default function init(root, ctx) {
         return { ln, pi, w: ln.offsetWidth, band: bandText(ln, { origin: 'left' }) };
       });
       const avg = meta.reduce((a, m) => a + m.w, 0) / meta.length || 1;
-      // the light leak: a beam drops from the menu bar and walks down the copy, one line per band pass
-      const sTop = stage.getBoundingClientRect().top, H = stage.offsetHeight || innerHeight;
-      const mb = document.getElementById('nav')?.offsetHeight || 37;
-      const B = { y: mb };
-      const drawLeak = () => { setY(B.y); setS(B.y / H); };
+      // the bar darkens one share per inked line and reaches #000 exactly as "black" inks
+      const kSpan = pillLine >= 0 ? pillLine + pillAt : meta.length;
+      setK(0); setR(0);
       tl = gsap.timeline({
         defaults: { ease: EASE.sweep },
         scrollTrigger: { trigger: root, start: mob ? 'top 55%' : 'top 50%', end: 'bottom bottom', scrub: .4 },
       });
-      tl.fromTo(beam, { opacity: 0 }, { opacity: 1, duration: .3, ease: 'none' }, 0)
-        .to(B, { y: () => meta[0].ln.getBoundingClientRect().top - sTop, duration: .6, ease: 'power2.in', onUpdate: drawLeak }, 0);
-      let t = .6;
+      let t = .4;
       meta.forEach((m, i) => {
         const o = { p: 0 }, dur = Math.max(.45, m.w / avg);
-        const r = m.ln.getBoundingClientRect(), next = meta[i + 1]?.ln.getBoundingClientRect();
-        tl.to(B, { y: r.bottom - sTop, duration: dur, ease: 'none', onUpdate: drawLeak }, t);
-        if (next) tl.to(B, { y: next.top - sTop, duration: next && meta[i + 1].pi !== m.pi ? .5 : .06, ease: 'none', onUpdate: drawLeak }, t + dur);
         tl.to(o, {
           p: 1, duration: dur,
           onUpdate() {
@@ -68,26 +68,30 @@ export default function init(root, ctx) {
             m.band.set(p);
             m.ln.style.setProperty('--x', `${(p * m.w).toFixed(1)}px`);
             m.ln.style.setProperty('--c', Math.max(0, Math.min(1, p * 7, (1 - p) * 7)).toFixed(3));
-            if (i === pillLine) root.classList.toggle('is-pill', p >= pillAt);
+            if (pillLine < 0 || i <= pillLine) setK(Math.min(1, (i + Math.min(p, i === pillLine ? pillAt : 1)) / kSpan));
+            if (i === pillLine) { root.classList.toggle('is-pill', p >= pillAt); setR(Math.max(0, (p - pillAt) / (1 - pillAt || 1)) * .35); }
+            if (i === pillLine + 1 && pillLine >= 0) setR(.35 + .65 * p);
             if (i === linkLine) root.classList.toggle('is-link', p >= linkAt);
           },
         }, t);
         t += dur + (meta[i + 1] && meta[i + 1].pi !== m.pi ? .5 : .06);
       });
-      // the housing's rim dissolves as the copy inks (black is what the notch was all along); the beam fades out at the end
-      tl.fromTo(housing, { opacity: .9, scale: 1 }, { opacity: 0, scale: 1.06, duration: t * .85, ease: 'power1.in', transformOrigin: '50% 0' }, .3)
-        .to(beam, { opacity: 0, duration: .5, ease: 'none' }, t - .3)
-        .to({}, { duration: t * .1 }, t);   // hold the inked poster before the stage lets go
+      tl.to({}, { duration: t * .1 }, t);   // hold the inked poster before the stage lets go
     };
     const queue = () => { if (!queued) { queued = true; queueMicrotask(build); } };
+    // keyboard: tabbing into a still-ghosted line jumps the track to its end so focus lands on inked copy (as #download)
+    const onFocus = () => { const st = tl?.scrollTrigger; if (st && st.progress < 0.9) window.scrollTo(0, st.end); };
+    root.addEventListener('focusin', onFocus);
 
     // the link's paragraph keeps its lines exposed to AT (a focusable link can't sit in aria-hidden)
     const splits = ps.map((p) => splitLines(p, { mask: false, onSplit: queue, ...(p.querySelector('a') ? { aria: 'none' } : {}) }));
     queue();
 
     return () => {
+      root.removeEventListener('focusin', onFocus);
       tl?.scrollTrigger?.kill(); tl?.kill(); sink.scrollTrigger?.kill(); sink.kill();
-      gsap.set([land, housing, leak, beam], { clearProps: 'all' });
+      gsap.set([land, notch, ...rims], { clearProps: 'all' });
+      root.style.removeProperty('--k');
       splits.forEach((s) => s.revert());
       root.classList.remove('is-live', 'is-pill', 'is-link');
     };

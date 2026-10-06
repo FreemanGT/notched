@@ -50,7 +50,12 @@ function boot() {
   roots.forEach((r) => io.observe(r));
   const idle = window.requestIdleCallback || ((f) => setTimeout(f, 200));
   const next = () => { const r = roots.find((x) => !sections.has(x.id)); if (r) { io.unobserve(r); load(r).then(() => idle(next, { timeout: 2000 })); } };
-  load(roots[0]).then(() => idle(next, { timeout: 2000 }));
+  load(roots[0]).then(() => {
+    idle(next, { timeout: 2000 });
+    // The download sheet (module + its stylesheet, which it links on eval) at idle, so a tap on a CTA never waits on
+    // two round trips. cta.js still loads it on hover/focus/click if this hasn't landed.
+    idle(() => import('./lib/signup.js').catch(() => {}), { timeout: 4000 });
+  });
 
   if (ScrollTrigger) {
     // One refresh path: ScrollTrigger's own load refresh covers first init; refresh again only for late fonts

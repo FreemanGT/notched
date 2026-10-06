@@ -1,4 +1,5 @@
-// #privacy (SPEC §5.6). The band draws on paper and its concave fillets step 10/14/20 pt; each statement is swept into a black menu bar.
+// #privacy (SPEC §5.6). The notch hangs from the black above, spreads into the band, the concave fillets step 10/14/20 pt;
+// then each statement row is swept into a full-width black menu bar.
 export default function init(root, ctx) {
   const { gsap, mm, MQ, lib } = ctx;
   const strip = root.querySelector('.pv__strip');
@@ -25,25 +26,25 @@ export default function init(root, ctx) {
       tw = gsap.to(k, { s: STEPS[i][0], duration: i ? .6 : .2, ease: i ? lib.EASE.fillet : 'power2.in', onUpdate: paintS });
     };
     const out = gsap.parseEase(lib.EASE.out);
+    // Notch alone (0–.2), band spreads out of it (.2–.55), corners click in (.6 / .72 / .86).
     const setP = (p) => {
-      strip.style.setProperty('--pv-x', out(Math.min(1, p / .35)).toFixed(4));
-      step(p < .35 ? 0 : p < .58 ? 1 : p < .8 ? 2 : 3);
+      strip.style.setProperty('--pv-x', out(Math.min(1, Math.max(0, (p - .2) / .35))).toFixed(4));
+      step(p < .6 ? 0 : p < .72 ? 1 : p < .86 ? 2 : 3);
     };
     k.s = 0; paintS(); setP(0);
     const st0 = gsap.timeline({ scrollTrigger: { trigger: root, start: 'top bottom', end: 'top 30%', scrub: true,
       onUpdate: (st) => setP(st.progress) } });
 
-    // Statements: hairline draws, then a black band sweeps left → right and the letters flip to paper.
+    // Statements: hairline draws, then the row becomes a menu bar: black sweeps left → right, letters and status flip white.
     const bands = rows.map((row) => {
-      const st = row.querySelector('.pv__st'), rule = row.querySelector('.pv__rule'), meta = row.querySelector('.pv__meta');
-      const bt = lib.bandText(st, { origin: 'left' });
+      const rule = row.querySelector('.pv__rule');
+      const bt = lib.bandText(row, { origin: 'left' });
       const k = { p: 0 };
       bt.set(0);
       gsap.timeline({ defaults: { ease: 'none' },
         scrollTrigger: { trigger: row, start: 'top 75%', end: 'top 45%', scrub: true } })
         .fromTo(rule, { scaleX: 0 }, { scaleX: 1, duration: .45, ease: lib.EASE.out }, 0)
-        .to(k, { p: 1, duration: 1, ease: lib.EASE.sweep, onUpdate: () => bt.set(k.p) }, 0)
-        .fromTo(meta, { autoAlpha: 0, x: -12 }, { autoAlpha: 1, x: 0, duration: .3, ease: lib.EASE.out }, .7);
+        .to(k, { p: 1, duration: 1, ease: lib.EASE.sweep, onUpdate: () => bt.set(k.p) }, 0);
       return bt;
     });
 

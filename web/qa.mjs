@@ -212,7 +212,7 @@ async function sheetChecks() {
       await page.evaluate(() => window.__qaOpener.click());
       await sleep(800);
       log(reqs.filter((r) => r.kind === "download").length > before, "stored email: second click downloads at once");
-      log(await page.evaluate(() => /write to qa@example.com/.test(document.querySelector(".sheet")?.textContent)), "returning view names the email");
+      log(await page.evaluate(() => /goes to qa@example.com/.test(document.querySelector(".sheet")?.textContent)), "returning view names the email");
     } else {
       log(await page.evaluate(() => /Get it on your Mac/.test(document.getElementById("sheet-title")?.textContent)), "macAway view");
       for (const w of [320, 390]) {

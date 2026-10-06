@@ -7,7 +7,8 @@ export default function init(root, ctx) {
   const grid = root.querySelector('.how__grid'), view = root.querySelector('.how__view'), scene = root.querySelector('.how__scene');
   const planes = $$('.how__plane'), tags = $$('.how__tag'), lines = $$('.how__leaders line'), dots = $$('.how__dot'), steps = $$('.how__step');
   const stampBox = root.querySelector('.how__stamp'), stamp = stampBox.querySelector('span'), STAMP = stamp.textContent;
-  const slabs = $$('.how__slab');
+  const slabs = $$('.how__slab'), strip = root.querySelector('.how__plane--strip');
+  const flashes = $$('.how__flash');
   const E = lib.EASE;
 
   // Static day paints: no loops (SPEC §8 budget: 4 static paints).
@@ -17,6 +18,8 @@ export default function init(root, ctx) {
     if (lib.reduced() || !gsap.plugins?.scrambleText) { stamp.textContent = STAMP; return; }
     gsap.to(stamp, { duration: 0.9, scrambleText: { text: STAMP, chars: '▮▯·', speed: 0.6 }, overwrite: true });
   };
+
+  const flash = (el) => gsap.fromTo(el, { opacity: 0.9 }, { opacity: 0, duration: 0.22, ease: 'power2.out', overwrite: true });
 
   // Mobile + reduced: the joining line spans first step → last plane.
   const measureLine = () => {
@@ -39,12 +42,17 @@ export default function init(root, ctx) {
       gsap.fromTo(planes[3], { '--rim': 1 }, { '--rim': 0, ease: 'none', scrollTrigger: { trigger: planes[3], start: 'top 55%', end: 'top 20%', scrub: 0.4 } });
       // the stamp wraps on narrow phones: fade it in rather than scramble (a growing text would shift layout)
       gsap.from(stampBox, { opacity: 0, y: 12, duration: 0.6, ease: E.out, scrollTrigger: { trigger: stampBox, start: 'top 92%', once: true } });
-      return () => { ro.disconnect(); stamp.textContent = STAMP; grid.style.removeProperty('--draw'); planes[3].style.removeProperty('--rim'); };
+      // 02: the band drops onto the copy (accelerating, scrubbed) and the card flashes white for a frame when it lands
+      let landed = false;
+      const drop = gsap.fromTo(slabs[0], { yPercent: -150 }, { yPercent: 0, ease: 'power2.in', scrollTrigger: { trigger: strip, start: 'top 88%', end: 'top 52%', scrub: 0.3 },
+        onUpdate() { const p = this.progress(); if (!landed && p > 0.995) { landed = true; flash(flashes[1]); } else if (p < 0.9) landed = false; } });
+      return () => { ro.disconnect(); drop.scrollTrigger?.kill(); drop.kill(); gsap.set(slabs[0], { clearProps: 'transform' });
+        stamp.textContent = STAMP; grid.style.removeProperty('--draw'); planes[3].style.removeProperty('--rim'); };
     }
 
     // ---------------------------------------------------------------- desk
-    const st = { o: 0, sep: 0, push: 0, rim: 1 }, VARS = Object.keys(st), d = tags.map(() => ({ v: 0 }));
-    let fused = false, done = false, active = -2, hot = -1, tl = null;
+    const st = { o: 0, sep: 0, bake: 0, push: 0, rim: 1 }, VARS = Object.keys(st), d = tags.map(() => ({ v: 0 }));
+    let baked = false, done = false, active = -2, hot = -1, tl = null;
     planes.forEach((p) => p.setAttribute('aria-pressed', 'false'));
     stamp.textContent = '';
 
@@ -72,15 +80,14 @@ export default function init(root, ctx) {
       });
       if (st.sep > 0.01 || d.some((x) => x.v > 0)) layout();
       const p = tl ? tl.progress() : 0;
-      const n = d.filter((x) => x.v > 0.5).length, on = p >= 0.6 ? 3 : [-1, 0, 0, 1, 2][n];   // copy+original = step 01
+      // spread: copy+original = 01, strip = 02, desk = 03. Fold replays it: bake = 02, collapse = 03, notch gone = 04.
+      const n = d.filter((x) => x.v > 0.5).length;
+      const on = p >= 0.84 ? 3 : p >= 0.69 ? 2 : p >= 0.56 ? 1 : [-1, 0, 0, 1, 2][n];
       if (on !== active) { active = on; steps.forEach((s, k) => s.classList.toggle('is-on', k === on)); }
-      if (fused !== p >= 0.78) { fused = !fused; if (fused) flash(); }
+      if (baked !== st.bake > 0.98) { baked = !baked; if (baked) { flash(flashes[0]); gsap.fromTo(slabs[0], { opacity: 1 }, { keyframes: [{ opacity: 0.5, duration: 0.05 }, { opacity: 1, duration: 0.07 }], ease: 'none', overwrite: true }); } }
       if (!done && p >= 0.93) { done = true; stampBox.style.opacity = 1; scramble(); }
       else if (done && p < 0.9) { done = false; gsap.killTweensOf(stamp); stamp.textContent = ''; stampBox.style.opacity = 0; }
     }
-
-    // One 120 ms flicker of the strip as the layers fuse.
-    const flash = () => gsap.fromTo(slabs, { opacity: 1 }, { keyframes: [{ opacity: 0.6, duration: 0.06 }, { opacity: 1, duration: 0.06 }], ease: 'none', overwrite: true });
 
     tl = gsap.timeline({
       defaults: { ease: 'none' }, onUpdate: render,
@@ -88,10 +95,11 @@ export default function init(root, ctx) {
     });
     tl.to(st, { o: 1, sep: 1, duration: 0.33, ease: E.inOut }, 0.1);            // orbit + separate
     d.forEach((x, i) => tl.to(x, { v: 1, duration: 0.07 }, 0.22 + i * 0.06));  // tags draw in sequence
-    tl.to(d, { v: 0, duration: 0.06 }, 0.58);                                   // leaders retract
-    tl.to(st, { o: 0, sep: 0, duration: 0.2, ease: E.inOut }, 0.58);            // collapse + fuse
-    tl.to(st, { push: 1, duration: 0.16, ease: E.inOut }, 0.78);                // last beat: dolly into the notch…
-    tl.to(st, { rim: 0, duration: 0.12 }, 0.8);                                 // …and its outline dissolves into the band
+    tl.to(d, { v: 0, duration: 0.05 }, 0.55);                                   // leaders retract
+    tl.to(st, { bake: 1, duration: 0.08, ease: 'power4.in' }, 0.6);             // the band falls onto the copy, hard (flash on landing)
+    tl.to(st, { o: 0, sep: 0, duration: 0.15, ease: E.inOut }, 0.69);           // the stack folds; the composite fills the desk plane
+    tl.to(st, { push: 1, duration: 0.12, ease: E.inOut }, 0.82);                // last beat: dolly into the notch…
+    tl.to(st, { rim: 0, duration: 0.1 }, 0.84);                                 // …and its outline dissolves into the band
     tl.set({}, {}, 1);                                                          // pad to 1 (hold on the finished desktop)
 
     // Toy: hovered/focused plane lifts +40px (CSS, knob ease). Keep leaders glued while it moves.
@@ -123,6 +131,7 @@ export default function init(root, ctx) {
       tags.forEach((t) => { t.style.opacity = t.style.clipPath = t.style.transform = ''; t.classList.remove('is-hot'); });
       dots.forEach((x) => (x.style.opacity = '')); lines.forEach((l) => (l.style.strokeDashoffset = ''));
       stampBox.style.opacity = ''; stamp.textContent = STAMP; steps.forEach((s) => s.classList.remove('is-on'));
+      gsap.set([...slabs, ...flashes], { clearProps: 'opacity' });
     };
   });
 }
