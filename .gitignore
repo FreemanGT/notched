@@ -5,6 +5,6 @@ Notched.xcodeproj/
 site/downloads/*.dmg
 site/downloads/*.delta
 .gstack/
-Vendor/
+/Vendor/
 .vercel/
 web/node_modules/
